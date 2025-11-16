@@ -14,7 +14,7 @@ RUN rm -rf /usr/local/tomcat/webapps/*
 
 # Copia tu .war (asegúrate de que el nombre coincida)
 # Al renombrarlo a ROOT.war, haces que sea la aplicación por defecto del servidor.
-COPY --from=build /app/target/chronotrack-0.0.1-SNAPSHOT.war /usr/local/tomcat/webapps/ROOT.war
+COPY --from=build /app/target/app.jar app.jar
 
 # Tomcat se ejecuta en el puerto 8080 por defecto
 EXPOSE 8080
