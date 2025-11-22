@@ -13,6 +13,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
+import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 
@@ -62,7 +63,7 @@ public class SecurityConfig {
 
         // Define de qué orígenes (frontends) aceptas peticiones.
         // ¡Importante! Usa la URL de tu frontend de Angular.
-        configuration.setAllowedOrigins(Arrays.asList("https://www.jornixs.com"));
+        configuration.setAllowedOrigins(List.of("https://www.jornixs.com/"));
 
         // Define qué métodos HTTP permites (GET, POST, etc.)
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
