@@ -63,7 +63,7 @@ public class SecurityConfig {
 
         // Define de qué orígenes (frontends) aceptas peticiones.
         // ¡Importante! Usa la URL de tu frontend de Angular.
-        configuration.setAllowedOrigins(List.of("https://www.jornixs.com/"));
+        configuration.setAllowedOrigins(List.of("https://www.jornixs.com"));
 
         // Define qué métodos HTTP permites (GET, POST, etc.)
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
