@@ -61,21 +61,15 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Define de qué orígenes (frontends) aceptas peticiones.
-        // ¡Importante! Usa la URL de tu frontend de Angular.
-        configuration.setAllowedOrigins(List.of("https://www.jornixs.com"));
+        configuration.setAllowedOrigins(List.of("https://www.jornixs.com", "jornixs.com", "www.jornixs.com"));
 
-        // Define qué métodos HTTP permites (GET, POST, etc.)
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 
-        // Define qué cabeceras permites.
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
 
-        // Permite que las credenciales (como cookies o tokens) se incluyan.
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Aplica esta configuración a todas las rutas de tu API.
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
