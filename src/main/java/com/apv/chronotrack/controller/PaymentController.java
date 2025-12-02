@@ -31,6 +31,9 @@ public class PaymentController {
     @Value("${stripe.api.secret-key}")
     private String stripeSecretKey;
 
+    @Value("${frontend.base.url}")
+    private String frontendUrl;
+
     public PaymentController(UserRepository userRepository, CompanyRepository companyRepository) {
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
@@ -43,13 +46,12 @@ public class PaymentController {
 
     @PostMapping("/create-checkout-session")
     public ResponseEntity<Map<String, String>> createCheckoutSession(@RequestBody CheckoutRequest request) throws StripeException {
-        String successUrl = "http://localhost:4200/payment-success";
-        String cancelUrl = "http://localhost:4200/";
+
 
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
-                .setSuccessUrl(successUrl)
-                .setCancelUrl(cancelUrl)
+                .setSuccessUrl(frontendUrl + "/payment-success")
+                .setCancelUrl(frontendUrl)
                 // --- LÍNEA AÑADIDA ---
                 // Guardamos el ID del precio para identificar el plan en el webhook
                 .setClientReferenceId(request.getPriceId())
