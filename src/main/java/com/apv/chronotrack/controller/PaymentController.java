@@ -19,6 +19,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -50,7 +52,7 @@ public class PaymentController {
 
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
-                .setSuccessUrl(frontendUrl + "/payment-success")
+                .setSuccessUrl(frontendUrl + "/payment/success")
                 .setCancelUrl(frontendUrl)
                 // --- LÍNEA AÑADIDA ---
                 // Guardamos el ID del precio para identificar el plan en el webhook
@@ -98,5 +100,29 @@ public class PaymentController {
         companyRepository.save(company);
 
         return ResponseEntity.ok("Tu suscripción ha sido cancelada y permanecerá activa hasta el final de tu ciclo de facturación.");
+    }
+
+    @GetMapping("/session/{sessionId}")
+    public ResponseEntity<Map<String, Object>> getSessionDetails(@PathVariable String sessionId) {
+        try {
+            // 1. Recuperamos la sesión directamente de Stripe
+            Session session = Session.retrieve(sessionId);
+
+            // 2. Extraemos el monto (Stripe lo da en centavos, ej: 1000 = 10.00)
+            Double amount = session.getAmountTotal() != null ? session.getAmountTotal() / 100.0 : 0.0;
+            String currency = session.getCurrency() != null ? session.getCurrency().toUpperCase() : "USD";
+            String status = session.getPaymentStatus();
+
+            // 3. Devolvemos la respuesta limpia al Frontend
+            Map<String, Object> response = new HashMap<>();
+            response.put("amount", amount);
+            response.put("currency", currency);
+            response.put("status", status);
+            response.put("customer_email", session.getCustomerDetails().getEmail());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
     }
 }
