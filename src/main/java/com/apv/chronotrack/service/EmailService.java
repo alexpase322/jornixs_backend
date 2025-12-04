@@ -20,7 +20,7 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
-    @Value("${frontend.base-url}")
+    @Value("${frontend.base.url}")
     private String frontendBaseUrl;
 
     @Async // Hace que el envío de correo no bloquee la respuesta HTTP
@@ -31,18 +31,18 @@ public class EmailService {
 
             String registrationUrl = frontendBaseUrl + "/complete-registration?token=" + token;
 
-            String htmlMsg = "<h3>¡Bienvenido a ChronoTrack!</h3>"
+            String htmlMsg = "<h3>¡Bienvenido a Jornixs!</h3>"
                     + "<p>Has sido invitado a unirte a <strong>" + companyName + "</strong>.</p>"
                     + "<p>Por favor, haz clic en el siguiente enlace para completar tu registro:</p>"
                     + "<a href=\"" + registrationUrl + "\">Completar Registro</a>"
                     + "<p>Si no puedes hacer clic en el enlace, copia y pega esta URL en tu navegador:</p>"
                     + "<p>" + registrationUrl + "</p>"
                     + "<br>"
-                    + "<p>Gracias,<br>El equipo de ChronoTrack</p>";
+                    + "<p>Gracias,<br>El equipo de Jornixs</p>";
 
             helper.setText(htmlMsg, true); // true indica que el contenido es HTML
             helper.setTo(to);
-            helper.setSubject("Invitación para unirte a ChronoTrack");
+            helper.setSubject("Invitación para unirte a Jornixs");
             helper.setFrom(fromEmail);
 
             mailSender.send(mimeMessage);
