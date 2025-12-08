@@ -7,4 +7,6 @@ import java.util.Optional;
 public interface CompanyRepository extends JpaRepository<Company, Long> {
     // Método para validar que el EIN de la empresa no esté ya registrado
     Optional<Company> findByEin(String ein);
+
+    Optional<Company> findByStripeCustomerId(String stripeCustomerId);
 }

@@ -125,4 +125,27 @@ public class PaymentController {
             return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
+
+    @PostMapping("/create-portal-session")
+    public ResponseEntity<Map<String, String>> createPortalSession(@AuthenticationPrincipal User user) throws StripeException {
+        // 1. Obtenemos la compañía del usuario actual
+        User freshUser = userRepository.findById(user.getId()).orElseThrow();
+        Company company = freshUser.getCompany();
+
+        // VALIDACIÓN: Necesitamos el Customer ID de Stripe (lo guardamos en el primer pago)
+        if (company.getStripeCustomerId() == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "No tienes una suscripción activa vinculada."));
+        }
+
+        // 2. Configuramos la sesión del portal
+        SessionCreateParams params = SessionCreateParams.builder()
+                .setCustomer(company.getStripeCustomerId()) // El ID del cliente (cus_...)
+                .setReturnUrl(frontendUrl + "/worker/dashboard") // A donde vuelven al salir
+                .build();
+
+        // 3. Generamos el enlace
+        Session session = Session.create(params);
+
+        return ResponseEntity.ok(Map.of("url", session.getUrl()));
+    }
 }

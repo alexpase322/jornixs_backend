@@ -52,6 +52,9 @@ public class Company {
     private String stripeCustomerId; // ID del cliente en Stripe
     private String stripeSubscriptionId; // ID de la suscripción activa
 
+    @Column(name = "plan_price_id")
+    private String planPriceId;
+
     @Enumerated(EnumType.STRING)
     private SubscriptionStatus subscriptionStatus;
 }

@@ -306,4 +306,45 @@ public class AuthService {
                 return 0; // Por defecto, no permite crear si el plan no es reconocido
         }
     }
+
+    @Transactional
+    public void updateSubscriptionStatus(String stripeCustomerId, String status, String newPriceId) {
+        // 1. Buscar la compañía por el ID de cliente de Stripe (cus_...)
+        Company company = companyRepository.findByStripeCustomerId(stripeCustomerId)
+                .orElseThrow(() -> new RuntimeException("⚠️ Webhook Error: No se encontró compañía con Stripe ID: " + stripeCustomerId));
+
+        // 2. Actualizar el estado
+        // Mapeamos el string de Stripe a tu Enum o String local
+        company.setSubscriptionStatus(mapStripeStatus(status));
+
+        // 3. Si hubo cambio de plan (Upgrade/Downgrade), actualizamos la info del plan
+        if (newPriceId != null && !newPriceId.equals(company.getPlanPriceId())) {
+            company.setPlanPriceId(newPriceId);
+
+            // Opcional: Aquí podrías llamar a un método para actualizar límites
+            // updateCompanyLimitsBasedOnPlan(company, newPriceId);
+            System.out.println("Plan actualizado para la empresa: " + company.getCompanyName());
+        }
+
+        companyRepository.save(company);
+    }
+
+    // Helper para convertir el status de Stripe a tu formato
+    private SubscriptionStatus mapStripeStatus(String stripeStatus) {
+        if (stripeStatus == null) return SubscriptionStatus.INACTIVE;
+
+        switch (stripeStatus.toLowerCase()) {
+            case "active":
+                return SubscriptionStatus.ACTIVE;
+            case "trialing":
+                return SubscriptionStatus.TRIALING; // O ACTIVE si prefieres tratarlos igual
+            case "canceled":
+                return SubscriptionStatus.CANCELED;
+            case "past_due":
+            case "unpaid":
+                return SubscriptionStatus.PAST_DUE;
+            default:
+                return SubscriptionStatus.INACTIVE;
+        }
+    }
 }
