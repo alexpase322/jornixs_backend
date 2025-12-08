@@ -151,6 +151,14 @@ public class WebhookController {
         payment.setStatus("succeeded");
         payment.setDate(LocalDateTime.now());
 
+        if (invoice.getAmountPaid() == 0) {
+            payment.setStatus("trial_started"); // Marcamos que es un trial
+            System.out.println("🎁 Trial iniciado para: " + invoice.getCustomerEmail());
+        } else {
+            payment.setStatus("succeeded");
+            System.out.println("💰 Pago registrado: " + payment.getAmount());
+        }
+
         paymentRepository.save(payment);
         System.out.println("💰 Pago recurrente registrado: " + invoice.getCustomerEmail());
     }

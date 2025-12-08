@@ -49,14 +49,20 @@ public class PaymentController {
     @PostMapping("/create-checkout-session")
     public ResponseEntity<Map<String, String>> createCheckoutSession(@RequestBody CheckoutRequest request) throws StripeException {
 
-
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
-                .setSuccessUrl(frontendUrl + "/payment/success")
+                .setSuccessUrl(frontendUrl + "/payment/success?session_id={CHECKOUT_SESSION_ID}")
                 .setCancelUrl(frontendUrl)
-                // --- LÍNEA AÑADIDA ---
-                // Guardamos el ID del precio para identificar el plan en el webhook
-                .setClientReferenceId(request.getPriceId())
+                .setClientReferenceId(request.getPriceId()) // Tu ID de plan
+
+                // --- AQUI ESTÁ LA MAGIA DE LOS 14 DÍAS GRATIS ---
+                .setSubscriptionData(
+                        SessionCreateParams.SubscriptionData.builder()
+                                .setTrialPeriodDays(14L) // <--- ESTO ACTIVA EL TRIAL
+                                .build()
+                )
+                // ------------------------------------------------
+
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
                                 .setPrice(request.getPriceId())
