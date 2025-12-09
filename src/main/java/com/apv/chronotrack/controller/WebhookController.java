@@ -4,6 +4,7 @@ import com.apv.chronotrack.auth.AuthService;
 import com.apv.chronotrack.models.Payment;
 import com.apv.chronotrack.repository.PaymentRepository;
 import com.apv.chronotrack.service.InvitationService;
+import com.stripe.exception.EventDataObjectDeserializationException;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.model.Invoice;
@@ -38,7 +39,7 @@ public class WebhookController {
     }
 
     @PostMapping("/stripe")
-    public ResponseEntity<String> handleStripeWebhook(@RequestBody String payload, @RequestHeader("Stripe-Signature") String sigHeader) {
+    public ResponseEntity<String> handleStripeWebhook(@RequestBody String payload, @RequestHeader("Stripe-Signature") String sigHeader) throws EventDataObjectDeserializationException {
         Event event;
 
         try {
@@ -55,14 +56,22 @@ public class WebhookController {
         // B. Log de diagnóstico (Para ver si entra)
         System.out.println("⚡ Evento recibido de Stripe: " + event.getType());
 
-        Optional<StripeObject> objectOptional = event.getDataObjectDeserializer().getObject();
+        StripeObject stripeObject = null;
 
-        if (objectOptional.isEmpty()) {
-            System.out.println("⚠️ Evento ignorado (Cuerpo vacío o versión de API antigua)");
-            return ResponseEntity.ok("Ignorado");
+        if (event.getDataObjectDeserializer().getObject().isPresent()) {
+            // Caso ideal: Las versiones coinciden
+            stripeObject = event.getDataObjectDeserializer().getObject().get();
+        } else {
+            // Caso común: Conflicto de versiones. Forzamos la lectura.
+            System.out.println("⚠️ Versión de API diferente detectada. Intentando deserialización forzada...");
+            stripeObject = event.getDataObjectDeserializer().deserializeUnsafe();
         }
 
-        StripeObject stripeObject = objectOptional.get();
+        // Si después de forzarlo sigue siendo null, entonces sí lo ignoramos
+        if (stripeObject == null) {
+            System.out.println("❌ Error: No se pudo leer el objeto del evento ni siquiera forzándolo.");
+            return ResponseEntity.ok("Ignorado (Null)");
+        }
 
         try {
             switch (event.getType()) {
