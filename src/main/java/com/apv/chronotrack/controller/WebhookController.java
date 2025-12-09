@@ -4,6 +4,7 @@ import com.apv.chronotrack.auth.AuthService;
 import com.apv.chronotrack.models.Payment;
 import com.apv.chronotrack.repository.PaymentRepository;
 import com.apv.chronotrack.service.InvitationService;
+import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
 import com.stripe.model.Invoice;
 import com.stripe.model.StripeObject;
@@ -41,63 +42,69 @@ public class WebhookController {
         Event event;
 
         try {
-            // 1. VERIFICAR FIRMA DE SEGURIDAD (Obligatorio)
+            // A. Verificación de Seguridad (CRÍTICO)
             event = Webhook.constructEvent(payload, sigHeader, endpointSecret);
+        } catch (SignatureVerificationException e) {
+            System.err.println("⚠️ FIRMA INVÁLIDA: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Firma inválida");
         } catch (Exception e) {
-            System.err.println("⚠️ Firma inválida en Webhook: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error de firma");
+            System.err.println("⚠️ Error deserializando webhook: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error general");
         }
 
-        // 2. OBTENER EL OBJETO DESERIALIZADO
+        // B. Log de diagnóstico (Para ver si entra)
+        System.out.println("⚡ Evento recibido de Stripe: " + event.getType());
+
         Optional<StripeObject> objectOptional = event.getDataObjectDeserializer().getObject();
 
         if (objectOptional.isEmpty()) {
-            // A veces Stripe envía eventos antiguos que la librería no puede deserializar
-            return ResponseEntity.ok("Evento ignorado (sin objeto)");
+            System.out.println("⚠️ Evento ignorado (Cuerpo vacío o versión de API antigua)");
+            return ResponseEntity.ok("Ignorado");
         }
 
         StripeObject stripeObject = objectOptional.get();
 
-        // 3. SWITCH PARA MANEJAR CADA TIPO DE EVENTO
         try {
             switch (event.getType()) {
 
-                // --- A: COMPRA INICIAL ---
+                // --- CASO 1: ACTIVACIÓN DE CUENTA (Checkout completado) ---
                 case "checkout.session.completed":
                     if (stripeObject instanceof com.stripe.model.checkout.Session) {
+                        System.out.println("🕵️‍♂️ Procesando Checkout...");
                         handleCheckoutCompleted((com.stripe.model.checkout.Session) stripeObject);
                     }
                     break;
 
-                // --- B: CAMBIO DE PLAN O ESTADO (Desde el Portal) ---
+                // --- CASO 2: DINERO ENTRANDO (Pago mensual o Trial iniciado) ---
+                case "invoice.payment_succeeded":
+                    if (stripeObject instanceof Invoice) {
+                        System.out.println("🕵️‍♂️ Procesando Factura...");
+                        handleInvoicePayment((Invoice) stripeObject);
+                    }
+                    break;
+
+                // --- CASO 3: CAMBIO DE PLAN EN EL PORTAL ---
                 case "customer.subscription.updated":
                     if (stripeObject instanceof Subscription) {
                         handleSubscriptionUpdated((Subscription) stripeObject);
                     }
                     break;
 
-                // --- C: CANCELACIÓN DEFINITIVA ---
+                // --- CASO 4: CANCELACIÓN ---
                 case "customer.subscription.deleted":
                     if (stripeObject instanceof Subscription) {
                         handleSubscriptionDeleted((Subscription) stripeObject);
                     }
                     break;
 
-                // --- D: REGISTRO DE PAGO MENSUAL (Factura pagada) ---
-                case "invoice.payment_succeeded":
-                    if (stripeObject instanceof Invoice) {
-                        handleInvoicePaymentSucceeded((Invoice) stripeObject);
-                    }
-                    break;
-
                 default:
-                    // Ignoramos eventos que no nos interesan
+                    // Ignoramos eventos que no configuramos
                     break;
             }
         } catch (Exception e) {
-            System.err.println("❌ Error procesando evento " + event.getType() + ": " + e.getMessage());
+            System.err.println("❌ ERROR FATAL DENTRO DEL SWITCH: " + e.getMessage());
             e.printStackTrace();
-            // Retornamos 200 OK para que Stripe no siga reintentando si es un error de lógica nuestra
+            // Devolvemos OK para no bloquear la cola de Stripe con reintentos infinitos si es error de lógica
         }
 
         return ResponseEntity.ok("Recibido");
@@ -106,60 +113,77 @@ public class WebhookController {
     // ================= MÉTODOS PRIVADOS DE LÓGICA =================
 
     private void handleCheckoutCompleted(com.stripe.model.checkout.Session session) {
-        String clientReferenceId = session.getClientReferenceId(); // ID del Plan
-        String customerEmail = session.getCustomerDetails().getEmail();
-        String stripeCustomerId = session.getCustomer(); // cus_...
-        String subscriptionId = session.getSubscription(); // sub_...
+        // Extraemos los datos con cuidado
+        String clientReferenceId = session.getClientReferenceId(); // Aquí viene el ID del plan (price_...)
+        String customerEmail = session.getCustomerDetails() != null ? session.getCustomerDetails().getEmail() : null;
+        String stripeCustomerId = session.getCustomer(); // cus_xxxx
+        String subscriptionId = session.getSubscription(); // sub_xxxx
 
-        System.out.println("✅ Nueva Suscripción: " + customerEmail + " | Plan: " + clientReferenceId);
+        // --- LOGS DETALLADOS PARA DEPURAR (Míralos en Render) ---
+        System.out.println("📝 DATOS DEL CHECKOUT RECIBIDOS:");
+        System.out.println("   > Email: " + customerEmail);
+        System.out.println("   > Plan ID (Reference): " + clientReferenceId);
+        System.out.println("   > Customer ID: " + stripeCustomerId);
+        System.out.println("   > Subscription ID: " + subscriptionId);
 
-        // Llama a tu servicio existente para invitar/activar
-        invitationService.createAndSendInvitation(customerEmail, clientReferenceId, stripeCustomerId, subscriptionId);
+        // Validación crítica
+        if (customerEmail == null || clientReferenceId == null) {
+            System.err.println("⚠️ ALERTA: Email o Plan ID son NULOS. No se puede activar la cuenta.");
+            System.err.println("   (Consejo: Revisa que el frontend esté enviando 'priceId' en 'clientReferenceId')");
+            return;
+        }
+
+        try {
+            System.out.println("🚀 Iniciando activación de servicio para: " + customerEmail);
+
+            // LLAMADA AL SERVICIO
+            invitationService.createAndSendInvitation(customerEmail, clientReferenceId, stripeCustomerId, subscriptionId);
+
+            System.out.println("✅ Servicio activado e invitación enviada correctamente.");
+
+        } catch (Exception e) {
+            System.err.println("❌ ERROR EN INVITATION SERVICE: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void handleSubscriptionUpdated(Subscription subscription) {
         String stripeCustomerId = subscription.getCustomer();
-        String status = subscription.getStatus(); // active, past_due, canceled...
+        String status = subscription.getStatus();
 
-        // Obtenemos el ID del precio actual (por si cambió de plan en el portal)
-        String newPriceId = subscription.getItems().getData().get(0).getPrice().getId();
+        // Recuperar el plan actual (útil si cambió en el portal)
+        String newPriceId = null;
+        if (!subscription.getItems().getData().isEmpty()) {
+            newPriceId = subscription.getItems().getData().get(0).getPrice().getId();
+        }
 
-        System.out.println("🔄 Suscripción Actualizada: " + stripeCustomerId + " -> " + status);
-
-        // Actualizamos la DB
         authService.updateSubscriptionStatus(stripeCustomerId, status, newPriceId);
+        System.out.println("🔄 Suscripción actualizada: " + stripeCustomerId + " -> " + status);
     }
 
     private void handleSubscriptionDeleted(Subscription subscription) {
         String stripeCustomerId = subscription.getCustomer();
-
-        System.out.println("❌ Suscripción Cancelada Definitivamente: " + stripeCustomerId);
-
-        // Actualizamos la DB a 'canceled' y removemos el plan
         authService.updateSubscriptionStatus(stripeCustomerId, "canceled", null);
+        System.out.println("❌ Suscripción cancelada: " + stripeCustomerId);
     }
 
-    private void handleInvoicePaymentSucceeded(Invoice invoice) {
-        // Este evento ocurre cada mes cuando se cobra la suscripción automáticamente
-        if (invoice.getAmountPaid() == 0) return; // Ignoramos facturas de prueba o monto 0
 
+    private void handleInvoicePayment(Invoice invoice) {
         Payment payment = new Payment();
-        payment.setStripeSessionId(invoice.getId()); // Usamos el ID de la factura como referencia
+        payment.setStripeSessionId(invoice.getId());
         payment.setAmount(invoice.getAmountPaid() / 100.0);
-        payment.setCurrency(invoice.getCurrency().toUpperCase());
+        payment.setCurrency(invoice.getCurrency() != null ? invoice.getCurrency().toUpperCase() : "USD");
         payment.setCustomerEmail(invoice.getCustomerEmail());
-        payment.setStatus("succeeded");
-        payment.setDate(LocalDateTime.now());
 
+        // Manejo de Trial (Monto 0)
         if (invoice.getAmountPaid() == 0) {
-            payment.setStatus("trial_started"); // Marcamos que es un trial
+            payment.setStatus("trial_started");
             System.out.println("🎁 Trial iniciado para: " + invoice.getCustomerEmail());
         } else {
             payment.setStatus("succeeded");
-            System.out.println("💰 Pago registrado: " + payment.getAmount());
+            System.out.println("💰 Pago registrado de: " + payment.getAmount());
         }
 
         paymentRepository.save(payment);
-        System.out.println("💰 Pago recurrente registrado: " + invoice.getCustomerEmail());
     }
 }
