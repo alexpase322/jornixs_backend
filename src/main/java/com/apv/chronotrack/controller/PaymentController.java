@@ -61,7 +61,6 @@ public class PaymentController {
                                 .setTrialPeriodDays(14L) // <--- ESTO ACTIVA EL TRIAL
                                 .build()
                 )
-                // ------------------------------------------------
 
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()

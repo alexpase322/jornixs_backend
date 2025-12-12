@@ -56,20 +56,21 @@ public class WebhookController {
         // B. Log de diagnóstico (Para ver si entra)
         System.out.println("⚡ Evento recibido de Stripe: " + event.getType());
 
+        // --- ESTE ES EL BLOQUE NUEVO QUE NECESITAS ---
         StripeObject stripeObject = null;
 
+        // 1. Intentamos leer normal
         if (event.getDataObjectDeserializer().getObject().isPresent()) {
-            // Caso ideal: Las versiones coinciden
             stripeObject = event.getDataObjectDeserializer().getObject().get();
         } else {
-            // Caso común: Conflicto de versiones. Forzamos la lectura.
+            // 2. Si falla, FORZAMOS la lectura (Esto es lo que te falta en Render)
             System.out.println("⚠️ Versión de API diferente detectada. Intentando deserialización forzada...");
             stripeObject = event.getDataObjectDeserializer().deserializeUnsafe();
         }
+        // ----------------------------------------------
 
-        // Si después de forzarlo sigue siendo null, entonces sí lo ignoramos
         if (stripeObject == null) {
-            System.out.println("❌ Error: No se pudo leer el objeto del evento ni siquiera forzándolo.");
+            System.out.println("❌ Error: No se pudo leer el objeto.");
             return ResponseEntity.ok("Ignorado (Null)");
         }
 
