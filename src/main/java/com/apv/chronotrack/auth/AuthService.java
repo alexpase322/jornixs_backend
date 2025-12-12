@@ -279,17 +279,25 @@ public class AuthService {
     }
 
     private String getPlanNameFromPriceId(String priceId) {
-        // Aquí mapeas los IDs de precio de Stripe a los nombres de tus planes
-        // ¡IMPORTANTE! Estos IDs deben coincidir con los que tienes en tu dashboard de Stripe
-        // y en el frontend.
         switch (priceId) {
-            case "price_emprendedor_id":
-                return "Emprendedor";
-            case "price_crecimiento_id":
-                return "Crecimiento";
-            case "price_corporativo_id":
-                return "Corporativo";
+            // --- PLAN ENTREPRENEUR (1 a 10 trabajadores) ---
+            case "price_1SIeqOLfOYfy0olvCdtPv8oZ":  // ID Mensual (Real)
+            case "price_PON_AQUI_TU_ID_ANUAL_ENTREPRENEUR": // <--- PEGA TU ID ANUAL AQUÍ
+                return "Entrepreneur";
+
+            // --- PLAN GROWTH (11 a 50 trabajadores) ---
+            case "price_1SIesCLfOYfy0olvCw9ZgZur":  // ID Mensual (Real)
+            case "price_PON_AQUI_TU_ID_ANUAL_GROWTH":      // <--- PEGA TU ID ANUAL AQUÍ
+                return "Growth";
+
+            // --- PLAN CORPORATE (51+ trabajadores) ---
+            case "price_1SIesyLfOYfy0olvhi1gFeFz":  // ID Mensual (Real)
+            case "price_PON_AQUI_TU_ID_ANUAL_CORPORATE":   // <--- PEGA TU ID ANUAL AQUÍ
+                return "Corporate";
+
             default:
+                // Esto es útil para depurar: te dirá en la consola exactamente qué ID llegó
+                System.out.println("❌ ID Recibido desconocido: " + priceId);
                 throw new IllegalArgumentException("ID de precio no reconocido: " + priceId);
         }
     }
