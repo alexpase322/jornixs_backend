@@ -282,17 +282,17 @@ public class AuthService {
         switch (priceId) {
             // --- PLAN ENTREPRENEUR (1 a 10 trabajadores) ---
             case "price_1SIeqOLfOYfy0olvCdtPv8oZ":  // ID Mensual (Real)
-            case "price_PON_AQUI_TU_ID_ANUAL_ENTREPRENEUR": // <--- PEGA TU ID ANUAL AQUÍ
+            case "price_1SagiALfOYfy0olvfnnDY34o": // <--- PEGA TU ID ANUAL AQUÍ
                 return "Entrepreneur";
 
             // --- PLAN GROWTH (11 a 50 trabajadores) ---
             case "price_1SIesCLfOYfy0olvCw9ZgZur":  // ID Mensual (Real)
-            case "price_PON_AQUI_TU_ID_ANUAL_GROWTH":      // <--- PEGA TU ID ANUAL AQUÍ
+            case "price_1SagsQLfOYfy0olvhHkTYtn4":      // <--- PEGA TU ID ANUAL AQUÍ
                 return "Growth";
 
             // --- PLAN CORPORATE (51+ trabajadores) ---
             case "price_1SIesyLfOYfy0olvhi1gFeFz":  // ID Mensual (Real)
-            case "price_PON_AQUI_TU_ID_ANUAL_CORPORATE":   // <--- PEGA TU ID ANUAL AQUÍ
+            case "price_1SaguNLfOYfy0olvwJPuazCO":   // <--- PEGA TU ID ANUAL AQUÍ
                 return "Corporate";
 
             default:
