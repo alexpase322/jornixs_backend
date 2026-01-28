@@ -62,18 +62,18 @@ public class EmailService {
             String registrationUrl = frontendBaseUrl + "/register-company?token=" + token;
 
             // Texto del correo adaptado para el nuevo administrador
-            String htmlMsg = "<h3>¡Gracias por suscribirte a ChronoTrack!</h3>"
+            String htmlMsg = "<h3>¡Gracias por suscribirte a Jornixs!</h3>"
                     + "<p>Estás a un solo paso de empezar a gestionar tu equipo.</p>"
                     + "<p>Por favor, haz clic en el siguiente enlace para registrar tu compañía y tu cuenta de administrador:</p>"
                     + "<a href=\"" + registrationUrl + "\">Registrar mi Compañía</a>"
                     + "<p>Si no puedes hacer clic en el enlace, copia y pega esta URL en tu navegador:</p>"
                     + "<p>" + registrationUrl + "</p>"
                     + "<br>"
-                    + "<p>Gracias,<br>El equipo de ChronoTrack</p>";
+                    + "<p>Gracias,<br>El equipo de Jornixs</p>";
 
             helper.setText(htmlMsg, true);
             helper.setTo(to);
-            helper.setSubject("Completa tu registro en ChronoTrack");
+            helper.setSubject("Completa tu registro en Jornixs");
             helper.setFrom(fromEmail);
 
             mailSender.send(mimeMessage);
@@ -90,7 +90,7 @@ public class EmailService {
 
             String resetUrl = frontendBaseUrl + "/reset-password?token=" + token;
 
-            String htmlMsg = "<h3>Restablecer Contraseña de ChronoTrack</h3>"
+            String htmlMsg = "<h3>Restablecer Contraseña de Jornixs</h3>"
                     + "<p>Hemos recibido una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace para continuar:</p>"
                     + "<a href=\"" + resetUrl + "\">Restablecer mi Contraseña</a>"
                     + "<p>Si no solicitaste esto, puedes ignorar este correo. El enlace expirará en 1 hora.</p>";
@@ -121,7 +121,7 @@ public class EmailService {
                     + "</strong> ha sido aprobada por tu administrador.</p>"
                     + "<p>El pago correspondiente se incluirá en el próximo ciclo de nómina.</p>"
                     + "<br>"
-                    + "<p>Gracias,<br>El equipo de ChronoTrack</p>";
+                    + "<p>Gracias,<br>El equipo de Jornixs</p>";
 
             helper.setText(htmlMsg, true);
             helper.setTo(timesheet.getUser().getEmail());
@@ -150,7 +150,7 @@ public class EmailService {
                     + "<p style=\"font-style: italic; padding: 10px; background-color: #f0f0f0; border-left: 4px solid #d9534f;\">"
                     + timesheet.getRejectionReason()
                     + "</p>"
-                    + "<p>Por favor, ingresa a ChronoTrack, reabre la hoja de horas para hacer las correcciones necesarias y vuelve a enviarla para su aprobación.</p>";
+                    + "<p>Por favor, ingresa a Jornixs, reabre la hoja de horas para hacer las correcciones necesarias y vuelve a enviarla para su aprobación.</p>";
 
             helper.setText(htmlMsg, true);
             helper.setTo(timesheet.getUser().getEmail());
@@ -173,7 +173,7 @@ public class EmailService {
             String subject = "Recordatorio: Envía tu hoja de horas";
             String htmlMsg = "<h3>Hola, " + worker.getFullName() + ".</h3>"
                     + "<p>Este es un recordatorio amistoso para que envíes tu hoja de horas de la semana para su aprobación.</p>"
-                    + "<p>Por favor, ingresa a ChronoTrack para completar el proceso.</p>";
+                    + "<p>Por favor, ingresa a Jornixs para completar el proceso.</p>";
 
             helper.setText(htmlMsg, true);
             helper.setTo(worker.getEmail());
@@ -191,7 +191,7 @@ public class EmailService {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
 
-            String subject = "Resumen Semanal de Nómina - ChronoTrack";
+            String subject = "Resumen Semanal de Nómina - Jornixs";
             String htmlMsg = "<h3>Hola, " + admin.getFullName() + ".</h3>"
                     + "<p>Adjunto encontrarás un resumen de la nómina consolidada para la semana del <strong>"
                     + report.getStartDate() + "</strong> al <strong>" + report.getEndDate() + "</strong>.</p>"
