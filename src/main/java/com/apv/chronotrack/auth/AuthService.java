@@ -46,7 +46,9 @@ public class AuthService {
     @Transactional
     public void inviteUser(InviteRequest request) {
         // 1. Obtiene al administrador autenticado que realiza la acción.
-        User admin = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User principalAdmin = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User admin = userRepository.findById(principalAdmin.getId())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario administrador no encontrado."));
         Company adminCompany = admin.getCompany();
         long currentWorkerCount = userRepository.countByCompanyAndRole_RoleName(adminCompany, RoleName.ROLE_TRABAJADOR);
         int planLimit = getLimitForPlan(adminCompany.getSubscriptionPlan());
@@ -303,12 +305,19 @@ public class AuthService {
     }
 
     private int getLimitForPlan(String planName) {
+        if (planName == null) {
+            return 0;
+        }
+
         switch (planName) {
             case "Emprendedor":
+            case "Entrepreneur":
                 return 10;
             case "Crecimiento":
+            case "Growth":
                 return 50;
             case "Corporativo":
+            case "Corporate":
                 return Integer.MAX_VALUE; // O un número muy grande para "ilimitado"
             default:
                 return 0; // Por defecto, no permite crear si el plan no es reconocido
