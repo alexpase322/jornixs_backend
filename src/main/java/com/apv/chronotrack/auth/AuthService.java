@@ -46,7 +46,9 @@ public class AuthService {
     @Transactional
     public void inviteUser(InviteRequest request) {
         // 1. Obtiene al administrador autenticado que realiza la acción.
-        User admin = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User principalAdmin = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User admin = userRepository.findById(principalAdmin.getId())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario administrador no encontrado."));
         Company adminCompany = admin.getCompany();
         long currentWorkerCount = userRepository.countByCompanyAndRole_RoleName(adminCompany, RoleName.ROLE_TRABAJADOR);
         int planLimit = getLimitForPlan(adminCompany.getSubscriptionPlan());
