@@ -34,7 +34,6 @@ public class AuthController {
 
     // Endpoint solo para administradores
     @PostMapping("/invite")
-    @PreAuthorize("hasAuthority('ROLE_ADMINISTRADOR')")
     public ResponseEntity<String> inviteUser(@Valid @RequestBody InviteRequest request) {
         authService.inviteUser(request);
         return ResponseEntity.ok("Invitación enviada correctamente.");
