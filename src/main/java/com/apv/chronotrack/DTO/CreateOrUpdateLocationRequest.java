@@ -11,10 +11,10 @@ public class CreateOrUpdateLocationRequest {
 
     private String address;
 
-    @NotNull(message = "La latitud es requerida.")
+    // Opcional: si no se envía, se intentará obtener desde la dirección por geocodificación.
     private Double latitude;
 
-    @NotNull(message = "La longitud es requerida.")
+    // Opcional: si no se envía, se intentará obtener desde la dirección por geocodificación.
     private Double longitude;
 
     @NotNull(message = "El radio del geofence es requerido.")
