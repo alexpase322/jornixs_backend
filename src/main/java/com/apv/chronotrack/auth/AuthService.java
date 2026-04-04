@@ -177,6 +177,9 @@ public class AuthService {
         // 2. Si la autenticación es exitosa, busca al usuario.
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
 
+        // 2.1 Validar estado de suscripción/pago de la compañía
+        validateCompanyCanLogin(user);
+
         // 3. Genera y devuelve el token JWT.
         String jwtToken = jwtService.generateToken(user);
         return AuthResponse.builder().token(jwtToken).build();
@@ -362,6 +365,24 @@ public class AuthService {
                 return SubscriptionStatus.PAST_DUE;
             default:
                 return SubscriptionStatus.INACTIVE;
+        }
+    }
+
+    private void validateCompanyCanLogin(User user) {
+        Company company = user.getCompany();
+
+        if (company == null) {
+            throw new IllegalStateException("No se encontró una compañía asociada a tu cuenta.");
+        }
+
+        SubscriptionStatus status = company.getSubscriptionStatus();
+        boolean hasValidStatus = status == SubscriptionStatus.ACTIVE || status == SubscriptionStatus.TRIALING;
+
+        // Si no tiene IDs de Stripe, tratamos la cuenta como no pagada/no activada.
+        boolean hasStripeSubscription = company.getStripeCustomerId() != null && company.getStripeSubscriptionId() != null;
+
+        if (!hasValidStatus || !hasStripeSubscription) {
+            throw new IllegalStateException("Tu empresa no tiene un pago/suscripción activa. Debes completar el pago para iniciar sesión.");
         }
     }
 }
