@@ -1,6 +1,8 @@
 package com.apv.chronotrack.controller;
 
 import com.apv.chronotrack.DTO.CreateOrUpdateLocationRequest;
+import com.apv.chronotrack.DTO.GeocodeAddressRequest;
+import com.apv.chronotrack.DTO.GeocodeAddressResponse;
 import com.apv.chronotrack.DTO.WorkLocationDto;
 import com.apv.chronotrack.models.User;
 import com.apv.chronotrack.service.WorkLocationService;
@@ -43,5 +45,12 @@ public class WorkLocationController {
     @GetMapping("/{id}")
     public ResponseEntity<WorkLocationDto> getLocationById(@PathVariable Long id, @AuthenticationPrincipal User admin) {
         return ResponseEntity.ok(locationService.getLocationById(id, admin));
+    }
+
+    @PostMapping("/geocode")
+    public ResponseEntity<GeocodeAddressResponse> geocodeAddress(
+            @Valid @RequestBody GeocodeAddressRequest request,
+            @AuthenticationPrincipal User admin) {
+        return ResponseEntity.ok(locationService.geocodeAddress(request.getAddress(), admin));
     }
 }

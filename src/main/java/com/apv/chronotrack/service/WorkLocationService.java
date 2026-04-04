@@ -1,6 +1,7 @@
 package com.apv.chronotrack.service;
 
 import com.apv.chronotrack.DTO.CreateOrUpdateLocationRequest;
+import com.apv.chronotrack.DTO.GeocodeAddressResponse;
 import com.apv.chronotrack.DTO.WorkLocationDto;
 import com.apv.chronotrack.models.Company;
 import com.apv.chronotrack.models.User;
@@ -23,6 +24,7 @@ public class WorkLocationService {
     private final WorkLocationRepository locationRepository;
     private final UserRepository userRepository;
     private final AuditService auditService;
+    private final GeocodingService geocodingService;
 
     @Transactional
     public WorkLocationDto createLocation(CreateOrUpdateLocationRequest request, User admin) {
@@ -32,8 +34,9 @@ public class WorkLocationService {
         WorkLocation newLocation = new WorkLocation();
         newLocation.setName(request.getName());
         newLocation.setAddress(request.getAddress());
-        newLocation.setLatitude(request.getLatitude());
-        newLocation.setLongitude(request.getLongitude());
+        GeocodingService.GeocodingResult coordinates = resolveCoordinates(request);
+        newLocation.setLatitude(coordinates.latitude());
+        newLocation.setLongitude(coordinates.longitude());
         newLocation.setGeofenceRadiusMeters(request.getGeofenceRadiusMeters());
         newLocation.setCompany(company);
 
@@ -62,11 +65,12 @@ public class WorkLocationService {
     public WorkLocationDto updateLocation(Long locationId, CreateOrUpdateLocationRequest request, User admin) {
         User freshAdmin = findFreshUser(admin);
         WorkLocation location = findLocationAndVerifyCompany(locationId, freshAdmin);
+        GeocodingService.GeocodingResult coordinates = resolveCoordinates(request);
 
         location.setName(request.getName());
         location.setAddress(request.getAddress());
-        location.setLatitude(request.getLatitude());
-        location.setLongitude(request.getLongitude());
+        location.setLatitude(coordinates.latitude());
+        location.setLongitude(coordinates.longitude());
         location.setGeofenceRadiusMeters(request.getGeofenceRadiusMeters());
 
         WorkLocation updatedLocation = locationRepository.save(location);
@@ -129,5 +133,31 @@ public class WorkLocationService {
         User freshAdmin = findFreshUser(admin);
         WorkLocation location = findLocationAndVerifyCompany(locationId, freshAdmin);
         return convertToDto(location);
+    }
+
+    @Transactional(readOnly = true)
+    public GeocodeAddressResponse geocodeAddress(String address, User admin) {
+        findFreshUser(admin);
+        GeocodingService.GeocodingResult geocodingResult = geocodingService.geocodeAddress(address);
+        return GeocodeAddressResponse.builder()
+                .latitude(geocodingResult.latitude())
+                .longitude(geocodingResult.longitude())
+                .normalizedAddress(geocodingResult.normalizedAddress())
+                .build();
+    }
+
+    private GeocodingService.GeocodingResult resolveCoordinates(CreateOrUpdateLocationRequest request) {
+        boolean hasLatitude = request.getLatitude() != null;
+        boolean hasLongitude = request.getLongitude() != null;
+
+        if (hasLatitude && hasLongitude) {
+            return new GeocodingService.GeocodingResult(request.getLatitude(), request.getLongitude(), request.getAddress());
+        }
+
+        if (hasLatitude != hasLongitude) {
+            throw new IllegalArgumentException("Debes enviar latitud y longitud juntas, o ninguna para geocodificar por dirección.");
+        }
+
+        return geocodingService.geocodeAddress(request.getAddress());
     }
 }

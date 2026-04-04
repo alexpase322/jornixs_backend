@@ -46,7 +46,9 @@ public class AuthService {
     @Transactional
     public void inviteUser(InviteRequest request) {
         // 1. Obtiene al administrador autenticado que realiza la acción.
-        User admin = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User principalAdmin = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User admin = userRepository.findById(principalAdmin.getId())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario administrador no encontrado."));
         Company adminCompany = admin.getCompany();
         long currentWorkerCount = userRepository.countByCompanyAndRole_RoleName(adminCompany, RoleName.ROLE_TRABAJADOR);
         int planLimit = getLimitForPlan(adminCompany.getSubscriptionPlan());
@@ -174,6 +176,9 @@ public class AuthService {
 
         // 2. Si la autenticación es exitosa, busca al usuario.
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+
+        // 2.1 Validar estado de suscripción/pago de la compañía
+        validateCompanyCanLogin(user);
 
         // 3. Genera y devuelve el token JWT.
         String jwtToken = jwtService.generateToken(user);
@@ -303,12 +308,19 @@ public class AuthService {
     }
 
     private int getLimitForPlan(String planName) {
+        if (planName == null) {
+            return 0;
+        }
+
         switch (planName) {
             case "Emprendedor":
+            case "Entrepreneur":
                 return 10;
             case "Crecimiento":
+            case "Growth":
                 return 50;
             case "Corporativo":
+            case "Corporate":
                 return Integer.MAX_VALUE; // O un número muy grande para "ilimitado"
             default:
                 return 0; // Por defecto, no permite crear si el plan no es reconocido
@@ -353,6 +365,24 @@ public class AuthService {
                 return SubscriptionStatus.PAST_DUE;
             default:
                 return SubscriptionStatus.INACTIVE;
+        }
+    }
+
+    private void validateCompanyCanLogin(User user) {
+        Company company = user.getCompany();
+
+        if (company == null) {
+            throw new IllegalStateException("No se encontró una compañía asociada a tu cuenta.");
+        }
+
+        SubscriptionStatus status = company.getSubscriptionStatus();
+        boolean hasValidStatus = status == SubscriptionStatus.ACTIVE || status == SubscriptionStatus.TRIALING;
+
+        // Si no tiene IDs de Stripe, tratamos la cuenta como no pagada/no activada.
+        boolean hasStripeSubscription = company.getStripeCustomerId() != null && company.getStripeSubscriptionId() != null;
+
+        if (!hasValidStatus || !hasStripeSubscription) {
+            throw new IllegalStateException("Tu empresa no tiene un pago/suscripción activa. Debes completar el pago para iniciar sesión.");
         }
     }
 }
