@@ -32,6 +32,7 @@ public class AdminService {
     private final UserWorkAssignmentRepository assignmentRepository;
     private final WorkLocationRepository workLocationRepository;
     private final WeeklyTimesheetRepository timesheetRepository;
+    private final CompanyRepository companyRepository;
 
     // --- MÉTODOS DE REPORTES ---
 
