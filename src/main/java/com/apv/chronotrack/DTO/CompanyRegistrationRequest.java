@@ -41,4 +41,6 @@ public class CompanyRegistrationRequest {
 
     @AssertTrue(message = "Debes aceptar los términos y condiciones.")
     private boolean termsAccepted;
+
+    private String logoUrl;
 }

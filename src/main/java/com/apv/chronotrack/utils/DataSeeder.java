@@ -4,6 +4,8 @@ package com.apv.chronotrack.utils;
 import com.apv.chronotrack.models.Role;
 import com.apv.chronotrack.models.RoleName;
 import com.apv.chronotrack.repository.RoleRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class DataSeeder implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
     private final RoleRepository roleRepository;
 
@@ -26,7 +30,7 @@ public class DataSeeder implements CommandLineRunner {
             Role workerRole = new Role();
             workerRole.setRoleName(RoleName.ROLE_TRABAJADOR);
             roleRepository.save(workerRole);
-            System.out.println("Rol TRABAJADOR creado.");
+            log.info("Rol TRABAJADOR creado.");
         }
 
         // Revisa si el rol de administrador ya existe. Si no, lo crea.
@@ -34,7 +38,7 @@ public class DataSeeder implements CommandLineRunner {
             Role adminRole = new Role();
             adminRole.setRoleName(RoleName.ROLE_ADMINISTRADOR);
             roleRepository.save(adminRole);
-            System.out.println("Rol ADMINISTRADOR creado.");
+            log.info("Rol ADMINISTRADOR creado.");
         }
     }
 }

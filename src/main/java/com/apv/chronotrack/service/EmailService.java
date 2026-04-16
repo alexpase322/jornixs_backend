@@ -5,6 +5,8 @@ import com.apv.chronotrack.models.User;
 import com.apv.chronotrack.models.WeeklyTimesheet;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class EmailService {
+
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
 
@@ -49,7 +53,7 @@ public class EmailService {
 
         } catch (Exception e) {
             // En una aplicación real, aquí manejarías el error de forma más robusta (logs, reintentos, etc.)
-            System.err.println("Error al enviar el correo: " + e.getMessage());
+            log.error("Error al enviar el correo de invitacion: {}", e.getMessage(), e);
         }
     }
     @Async
@@ -79,7 +83,7 @@ public class EmailService {
             mailSender.send(mimeMessage);
 
         } catch (Exception e) {
-            System.err.println("Error al enviar el correo de registro de compañía: " + e.getMessage());
+            log.error("Error al enviar el correo de registro de compania: {}", e.getMessage(), e);
         }
     }
     @Async
@@ -102,7 +106,7 @@ public class EmailService {
             mailSender.send(mimeMessage);
 
         } catch (Exception e) {
-            System.err.println("Error al enviar el correo de reseteo de contraseña: " + e.getMessage());
+            log.error("Error al enviar el correo de reseteo de contrasena: {}", e.getMessage(), e);
         }
     }
 
@@ -131,7 +135,7 @@ public class EmailService {
             mailSender.send(mimeMessage);
 
         } catch (Exception e) {
-            System.err.println("Error al enviar el correo de aprobación: " + e.getMessage());
+            log.error("Error al enviar el correo de aprobacion: {}", e.getMessage(), e);
         }
     }
 
@@ -160,7 +164,7 @@ public class EmailService {
             mailSender.send(mimeMessage);
 
         } catch (Exception e) {
-            System.err.println("Error al enviar el correo de rechazo: " + e.getMessage());
+            log.error("Error al enviar el correo de rechazo: {}", e.getMessage(), e);
         }
     }
 
@@ -181,7 +185,7 @@ public class EmailService {
             helper.setFrom(fromEmail);
             mailSender.send(mimeMessage);
         } catch (Exception e) {
-            System.err.println("Error al enviar el correo de recordatorio al trabajador: " + e.getMessage());
+            log.error("Error al enviar el correo de recordatorio al trabajador: {}", e.getMessage(), e);
         }
     }
 
@@ -204,7 +208,7 @@ public class EmailService {
             helper.setFrom(fromEmail);
             mailSender.send(mimeMessage);
         } catch (Exception e) {
-            System.err.println("Error al enviar el resumen semanal al admin: " + e.getMessage());
+            log.error("Error al enviar el resumen semanal al admin: {}", e.getMessage(), e);
         }
     }
 }

@@ -28,4 +28,5 @@ public class DetailedPayrollReportDto {
     private String companyName;
     private String companyAddress;
     private String companyPhoneNumber;
+    private String companyLogoUrl;
 }

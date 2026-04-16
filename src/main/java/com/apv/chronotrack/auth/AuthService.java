@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,7 +27,8 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class AuthService {
 
-    // Dependencias inyectadas a través del constructor de Lombok
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
@@ -112,7 +115,7 @@ public class AuthService {
         // 5. Simula el envío del correo electrónico de invitación.
         // En una aplicación real, aquí se integraría un servicio de email (como SendGrid, AWS SES, etc.)
         // para enviar un enlace único al nuevo usuario.
-        System.out.println("Enviando email de invitación para completar el registro a: " + request.getEmail());
+        log.info("Enviando email de invitacion para completar el registro a: {}", request.getEmail());
     }
 
     /**
@@ -226,7 +229,8 @@ public class AuthService {
         newCompany.setStripeCustomerId(invitation.getStripeCustomerId());
         newCompany.setStripeSubscriptionId(invitation.getStripeSubscriptionId());
         newCompany.setSubscriptionStatus(SubscriptionStatus.ACTIVE);
-        newCompany.setSubscriptionPlan(planName); // <-- Guardamos el nombre del plan
+        newCompany.setSubscriptionPlan(planName);
+        newCompany.setLogoUrl(request.getLogoUrl());
         Company savedCompany = companyRepository.save(newCompany);
 
         // 3. Obtener el rol de Administrador.
@@ -302,7 +306,7 @@ public class AuthService {
 
             default:
                 // Esto es útil para depurar: te dirá en la consola exactamente qué ID llegó
-                System.out.println("❌ ID Recibido desconocido: " + priceId);
+                log.warn("ID de precio recibido desconocido: {}", priceId);
                 throw new IllegalArgumentException("ID de precio no reconocido: " + priceId);
         }
     }
@@ -343,7 +347,7 @@ public class AuthService {
 
             // Opcional: Aquí podrías llamar a un método para actualizar límites
             // updateCompanyLimitsBasedOnPlan(company, newPriceId);
-            System.out.println("Plan actualizado para la empresa: " + company.getCompanyName());
+            log.info("Plan actualizado para la empresa: {}", company.getCompanyName());
         }
 
         companyRepository.save(company);

@@ -13,4 +13,8 @@ public class ConsolidatedPayrollReportDto {
     private LocalDate endDate;
     private List<ConsolidatedPayrollEntryDto> entries;
     private BigDecimal grandTotalPay;
+    private String companyName;
+    private String companyAddress;
+    private String companyPhoneNumber;
+    private String companyLogoUrl;
 }

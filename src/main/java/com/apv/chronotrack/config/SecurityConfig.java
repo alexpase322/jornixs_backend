@@ -61,7 +61,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of("https://www.jornixs.com", "jornixs.com", "www.jornixs.com"));
+        configuration.setAllowedOrigins(List.of(
+                "https://www.jornixs.com",
+                "https://jornixs.com",
+                "http://localhost:4200"
+        ));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 

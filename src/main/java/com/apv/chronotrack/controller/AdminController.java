@@ -3,6 +3,7 @@ package com.apv.chronotrack.controller;
 import com.apv.chronotrack.DTO.*;
 import com.apv.chronotrack.models.User;
 import com.apv.chronotrack.service.AdminService;
+import com.apv.chronotrack.service.CloudinaryService;
 import com.apv.chronotrack.service.FileExportService;
 import com.lowagie.text.DocumentException;
 import jakarta.validation.Valid;
@@ -17,10 +18,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -28,7 +32,8 @@ import java.util.List;
 public class AdminController {
 
     private final AdminService adminService;
-    private final FileExportService fileExportService; // <-- Inyectar el nuevo servicio
+    private final FileExportService fileExportService;
+    private final CloudinaryService cloudinaryService;
 
     @GetMapping("/dashboard-stats")
     public ResponseEntity<DashboardStatsDto> getDashboardStats(@AuthenticationPrincipal User admin) {
@@ -162,5 +167,14 @@ public class AdminController {
     public ResponseEntity<Void> deleteTimeLog(@PathVariable Long timeLogId, @AuthenticationPrincipal User admin) {
         adminService.deleteTimeLog(timeLogId, admin);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/company/logo")
+    public ResponseEntity<Map<String, String>> uploadCompanyLogo(
+            @RequestParam("file") MultipartFile file,
+            @AuthenticationPrincipal User admin) throws IOException {
+        String logoUrl = cloudinaryService.uploadImage(file);
+        adminService.updateCompanyLogo(admin, logoUrl);
+        return ResponseEntity.ok(Map.of("logoUrl", logoUrl));
     }
 }

@@ -129,6 +129,10 @@ public class AdminService {
                 .endDate(endDate)
                 .entries(new java.util.ArrayList<>(consolidatedEntries.values()))
                 .grandTotalPay(grandTotalPay)
+                .companyName(company.getCompanyName())
+                .companyAddress(company.getAddress())
+                .companyPhoneNumber(company.getPhoneNumber())
+                .companyLogoUrl(company.getLogoUrl())
                 .build();
     }
 
@@ -200,6 +204,10 @@ public class AdminService {
                 .workerName(worker.getFullName())
                 .startDate(startDate)
                 .endDate(endDate)
+                .companyName(company.getCompanyName())
+                .companyAddress(company.getAddress())
+                .companyPhoneNumber(company.getPhoneNumber())
+                .companyLogoUrl(company.getLogoUrl())
                 .weeklySummaries(weeklySummaries)
                 .dailySummariesByWeek(dailySummariesByWeek)
                 .timeLogsByWeek(logsByWeekId.entrySet().stream()
@@ -314,6 +322,14 @@ public class AdminService {
             throw new IllegalStateException("Acción denegada: No se puede eliminar un registro de una semana que ya ha sido aprobada.");
         }
         timeLogRepository.delete(timeLog);
+    }
+
+    @Transactional
+    public void updateCompanyLogo(User admin, String logoUrl) {
+        User freshAdmin = findFreshUser(admin);
+        Company company = freshAdmin.getCompany();
+        company.setLogoUrl(logoUrl);
+        companyRepository.save(company);
     }
 
     // --- MÉTODOS PRIVADOS AUXILIARES ---

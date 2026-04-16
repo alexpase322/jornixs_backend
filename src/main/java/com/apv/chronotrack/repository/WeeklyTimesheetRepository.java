@@ -1,6 +1,8 @@
 package com.apv.chronotrack.repository;
 
 import com.apv.chronotrack.models.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,5 +21,15 @@ public interface WeeklyTimesheetRepository extends JpaRepository<WeeklyTimesheet
             @Param("company") Company company,
             @Param("status") TimesheetStatus status,
             @Param("userId") Long userId
+    );
+
+    @Query("SELECT ts FROM WeeklyTimesheet ts WHERE ts.user.company = :company " +
+            "AND (:status IS NULL OR ts.status = :status) " +
+            "AND (:userId IS NULL OR ts.user.id = :userId)")
+    Page<WeeklyTimesheet> findFilteredTimesheetsPaged(
+            @Param("company") Company company,
+            @Param("status") TimesheetStatus status,
+            @Param("userId") Long userId,
+            Pageable pageable
     );
 }

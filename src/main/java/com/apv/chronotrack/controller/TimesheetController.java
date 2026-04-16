@@ -6,6 +6,10 @@ import com.apv.chronotrack.models.User;
 import com.apv.chronotrack.service.TimesheetService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -69,10 +73,16 @@ public class TimesheetController {
     }
 
     @GetMapping("/api/timesheets")
-    public ResponseEntity<List<TimesheetSummaryDto>> getFilteredTimesheets(
+    public ResponseEntity<?> getFilteredTimesheets(
             @AuthenticationPrincipal User user,
             @RequestParam(required = false) TimesheetStatus status,
-            @RequestParam(required = false) Long workerId) {
+            @RequestParam(required = false) Long workerId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false, defaultValue = "20") Integer size) {
+        if (page != null) {
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "workWeek.startDate"));
+            return ResponseEntity.ok(timesheetService.getFilteredTimesheetsPaged(user, status, workerId, pageable));
+        }
         return ResponseEntity.ok(timesheetService.getFilteredTimesheets(user, status, workerId));
     }
 

@@ -6,6 +6,8 @@ import com.apv.chronotrack.repository.CompanyRepository;
 import com.apv.chronotrack.repository.UserRepository;
 import com.apv.chronotrack.repository.WeeklyTimesheetRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class NotificationSchedulerService {
+
+    private static final Logger log = LoggerFactory.getLogger(NotificationSchedulerService.class);
 
     private final WeeklyTimesheetRepository timesheetRepository;
     private final CompanyRepository companyRepository;
@@ -34,7 +38,7 @@ public class NotificationSchedulerService {
     @Scheduled(cron = "0 0 8 * * MON") // 08:00 cada lunes
     @Transactional(readOnly = true)
     public void sendWorkerReminders() {
-        System.out.println("Ejecutando tarea: Enviando recordatorios a trabajadores...");
+        log.info("Ejecutando tarea: Enviando recordatorios a trabajadores...");
 
         List<Company> companies = companyRepository.findAll();
         for (Company company : companies) {
@@ -49,7 +53,7 @@ public class NotificationSchedulerService {
                 }
             }
         }
-        System.out.println("Tarea de recordatorios finalizada.");
+        log.info("Tarea de recordatorios finalizada.");
     }
 
     /**
@@ -59,7 +63,7 @@ public class NotificationSchedulerService {
     @Scheduled(cron = "0 0 9 * * MON") // 09:00 cada lunes
     @Transactional(readOnly = true)
     public void sendAdminSummaries() {
-        System.out.println("Ejecutando tarea: Enviando resúmenes a administradores...");
+        log.info("Ejecutando tarea: Enviando resumenes a administradores...");
         LocalDate today = LocalDate.now();
         LocalDate startOfLastWeek = today.minusWeeks(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate endOfLastWeek = today.minusWeeks(1).with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
@@ -84,6 +88,6 @@ public class NotificationSchedulerService {
                 }
             }
         }
-        System.out.println("Tarea de resúmenes finalizada.");
+        log.info("Tarea de resumenes finalizada.");
     }
 }

@@ -7,6 +7,8 @@ import com.apv.chronotrack.repository.WeeklyTimesheetRepository;
 import com.apv.chronotrack.repository.WorkWeekRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -172,6 +174,29 @@ public class TimesheetService {
                         .rejectionReason(ts.getRejectionReason())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TimesheetSummaryDto> getFilteredTimesheetsPaged(User currentUser, TimesheetStatus status, Long workerId, Pageable pageable) {
+        User freshUser = findFreshUser(currentUser);
+
+        if (freshUser.getRole().getRoleName() == RoleName.ROLE_TRABAJADOR) {
+            workerId = freshUser.getId();
+        }
+
+        Page<WeeklyTimesheet> timesheets = timesheetRepository
+                .findFilteredTimesheetsPaged(freshUser.getCompany(), status, workerId, pageable);
+
+        return timesheets.map(ts -> TimesheetSummaryDto.builder()
+                .timesheetId(ts.getId())
+                .workerId(ts.getUser().getId())
+                .workerName(ts.getUser().getFullName())
+                .workWeekId(ts.getWorkWeek().getId())
+                .weekStartDate(ts.getWorkWeek().getStartDate())
+                .weekEndDate(ts.getWorkWeek().getEndDate())
+                .status(ts.getStatus())
+                .rejectionReason(ts.getRejectionReason())
+                .build());
     }
 
     // --- MÉTODO NUEVO PARA REENVIAR ---

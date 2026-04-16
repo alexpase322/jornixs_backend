@@ -57,4 +57,7 @@ public class Company {
 
     @Enumerated(EnumType.STRING)
     private SubscriptionStatus subscriptionStatus;
+
+    @Column(name = "logo_url")
+    private String logoUrl;
 }
