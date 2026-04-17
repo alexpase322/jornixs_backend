@@ -177,4 +177,16 @@ public class AdminController {
         adminService.updateCompanyLogo(admin, logoUrl);
         return ResponseEntity.ok(Map.of("logoUrl", logoUrl));
     }
+
+    @GetMapping("/company")
+    public ResponseEntity<CompanyInfoDto> getCompanyInfo(@AuthenticationPrincipal User admin) {
+        return ResponseEntity.ok(adminService.getCompanyInfo(admin));
+    }
+
+    @PutMapping("/company")
+    public ResponseEntity<CompanyInfoDto> updateCompanyInfo(
+            @Valid @RequestBody UpdateCompanyRequest request,
+            @AuthenticationPrincipal User admin) {
+        return ResponseEntity.ok(adminService.updateCompanyInfo(admin, request));
+    }
 }

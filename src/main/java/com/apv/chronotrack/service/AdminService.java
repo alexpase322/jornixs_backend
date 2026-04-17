@@ -333,6 +333,48 @@ public class AdminService {
         companyRepository.save(company);
     }
 
+    @Transactional(readOnly = true)
+    public CompanyInfoDto getCompanyInfo(User admin) {
+        User freshAdmin = findFreshUser(admin);
+        Company company = freshAdmin.getCompany();
+        return CompanyInfoDto.builder()
+                .id(company.getId())
+                .companyName(company.getCompanyName())
+                .address(company.getAddress())
+                .phoneNumber(company.getPhoneNumber())
+                .ein(company.getEin())
+                .logoUrl(company.getLogoUrl())
+                .subscriptionPlan(company.getSubscriptionPlan())
+                .subscriptionStatus(company.getSubscriptionStatus())
+                .stripeCustomerId(company.getStripeCustomerId())
+                .stripeSubscriptionId(company.getStripeSubscriptionId())
+                .planPriceId(company.getPlanPriceId())
+                .workLatitude(company.getWorkLatitude())
+                .workLongitude(company.getWorkLongitude())
+                .geofenceRadiusMeters(company.getGeofenceRadiusMeters())
+                .build();
+    }
+
+    @Transactional
+    public CompanyInfoDto updateCompanyInfo(User admin, UpdateCompanyRequest request) {
+        User freshAdmin = findFreshUser(admin);
+        Company company = freshAdmin.getCompany();
+        company.setCompanyName(request.getCompanyName());
+        company.setAddress(request.getAddress());
+        company.setPhoneNumber(request.getPhoneNumber());
+        if (request.getWorkLatitude() != null) {
+            company.setWorkLatitude(request.getWorkLatitude());
+        }
+        if (request.getWorkLongitude() != null) {
+            company.setWorkLongitude(request.getWorkLongitude());
+        }
+        if (request.getGeofenceRadiusMeters() != null) {
+            company.setGeofenceRadiusMeters(request.getGeofenceRadiusMeters());
+        }
+        companyRepository.save(company);
+        return getCompanyInfo(admin);
+    }
+
     // --- MÉTODOS PRIVADOS AUXILIARES ---
 
     private User findFreshUser(User user) {
