@@ -35,14 +35,14 @@ public class FileExportService {
 
     private static final Logger log = LoggerFactory.getLogger(FileExportService.class);
 
-    // --- METODO COMPARTIDO: Header con logo + info empresa ---
+    // --- SHARED METHOD: Header with logo + company info ---
     private void addCompanyHeader(Document document, String logoUrl, String companyName, String companyAddress, String companyPhoneNumber) throws DocumentException {
         PdfPTable headerTable = new PdfPTable(2);
         headerTable.setWidthPercentage(100);
         headerTable.setWidths(new float[]{1, 3});
         headerTable.getDefaultCell().setBorder(Rectangle.NO_BORDER);
 
-        // Logo desde Cloudinary URL
+        // Logo from Cloudinary URL
         try {
             if (logoUrl != null && !logoUrl.isBlank()) {
                 Image logo = Image.getInstance(new URL(logoUrl));
@@ -57,13 +57,13 @@ public class FileExportService {
                 headerTable.addCell(placeholderCell);
             }
         } catch (Exception e) {
-            log.warn("No se pudo cargar el logo de la empresa: {}", e.getMessage());
+            log.warn("Could not load company logo: {}", e.getMessage());
             PdfPCell placeholderCell = new PdfPCell(new Phrase(""));
             placeholderCell.setBorder(Rectangle.NO_BORDER);
             headerTable.addCell(placeholderCell);
         }
 
-        // Info de la empresa
+        // Company info
         PdfPCell companyInfoCell = new PdfPCell();
         companyInfoCell.setBorder(Rectangle.NO_BORDER);
         companyInfoCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
@@ -74,7 +74,7 @@ public class FileExportService {
             companyInfoCell.addElement(new Phrase("\n" + companyAddress));
         }
         if (companyPhoneNumber != null) {
-            companyInfoCell.addElement(new Phrase("\nTel: " + companyPhoneNumber));
+            companyInfoCell.addElement(new Phrase("\nPhone: " + companyPhoneNumber));
         }
         headerTable.addCell(companyInfoCell);
 
@@ -89,23 +89,23 @@ public class FileExportService {
 
         document.open();
 
-        // Header con logo + info empresa
+        // Header with logo + company info
         addCompanyHeader(document, report.getCompanyLogoUrl(),
                 report.getCompanyName(), report.getCompanyAddress(), report.getCompanyPhoneNumber());
 
         Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
-        Paragraph title = new Paragraph("Reporte de Nomina Consolidado", titleFont);
+        Paragraph title = new Paragraph("Consolidated Payroll Report", titleFont);
         title.setAlignment(Element.ALIGN_CENTER);
         document.add(title);
 
-        Paragraph period = new Paragraph("Periodo: " + report.getStartDate() + " al " + report.getEndDate());
+        Paragraph period = new Paragraph("Period: " + report.getStartDate() + " to " + report.getEndDate());
         period.setAlignment(Element.ALIGN_CENTER);
         document.add(period);
         document.add(Chunk.NEWLINE);
 
         PdfPTable table = new PdfPTable(5);
         table.setWidthPercentage(100);
-        String[] headers = {"Trabajador", "H. Regulares", "H. Extras", "H. Totales", "Total a Pagar"};
+        String[] headers = {"Worker", "Regular Hrs", "Overtime Hrs", "Total Hrs", "Total Pay"};
 
         Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
         for (String header : headers) {
@@ -127,7 +127,7 @@ public class FileExportService {
 
         document.add(Chunk.NEWLINE);
         Font totalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
-        Paragraph total = new Paragraph("Total General: $" + report.getGrandTotalPay(), totalFont);
+        Paragraph total = new Paragraph("Grand Total: $" + report.getGrandTotalPay(), totalFont);
         total.setAlignment(Element.ALIGN_RIGHT);
         document.add(total);
 
@@ -138,9 +138,9 @@ public class FileExportService {
     public ByteArrayInputStream generateConsolidatedExcel(ConsolidatedPayrollReportDto report) throws IOException {
         XSSFWorkbook workbook = new XSSFWorkbook();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        XSSFSheet sheet = workbook.createSheet("Reporte Nomina");
+        XSSFSheet sheet = workbook.createSheet("Consolidated Payroll");
 
-        String[] headers = {"Trabajador", "H. Regulares", "H. Extras", "H. Totales", "Total a Pagar"};
+        String[] headers = {"Worker", "Regular Hrs", "Overtime Hrs", "Total Hrs", "Total Pay"};
         Row headerRow = sheet.createRow(0);
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
@@ -168,34 +168,34 @@ public class FileExportService {
         PdfWriter.getInstance(document, out);
         document.open();
 
-        // Header con logo + info empresa (ahora desde Cloudinary)
+        // Header with logo + company info (from Cloudinary)
         addCompanyHeader(document, report.getCompanyLogoUrl(),
                 report.getCompanyName(), report.getCompanyAddress(), report.getCompanyPhoneNumber());
 
-        // Titulo del Reporte
+        // Report Title
         Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
-        Paragraph title = new Paragraph("Reporte de Nomina Detallado", titleFont);
+        Paragraph title = new Paragraph("Detailed Payroll Report", titleFont);
         title.setAlignment(Element.ALIGN_CENTER);
         document.add(title);
 
-        Paragraph subtitle = new Paragraph("Trabajador: " + report.getWorkerName() +
-                " | Periodo: " + report.getStartDate() + " al " + report.getEndDate() +
-                " | Generado: " + LocalDate.now().format(DateTimeFormatter.ISO_DATE));
+        Paragraph subtitle = new Paragraph("Worker: " + report.getWorkerName() +
+                " | Period: " + report.getStartDate() + " to " + report.getEndDate() +
+                " | Generated: " + LocalDate.now().format(DateTimeFormatter.ISO_DATE));
         subtitle.setAlignment(Element.ALIGN_CENTER);
         document.add(subtitle);
         document.add(Chunk.NEWLINE);
 
-        // Tablas de horas por semana
+        // Weekly hours tables
         for (WeeklyPaySummaryDto weeklySummary : report.getWeeklySummaries()) {
             Font weekFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
-            document.add(new Paragraph("Semana: " + weeklySummary.getWorkWeek().getStartDate() + " - " + weeklySummary.getWorkWeek().getEndDate(), weekFont));
+            document.add(new Paragraph("Week: " + weeklySummary.getWorkWeek().getStartDate() + " - " + weeklySummary.getWorkWeek().getEndDate(), weekFont));
 
             PdfPTable table = new PdfPTable(9);
             table.setWidthPercentage(100);
             table.setSpacingBefore(10);
             table.setWidths(new float[]{2.5f, 2f, 1f, 1.5f, 1.5f, 1f, 1.5f, 1f, 1.5f});
 
-            String[] headers = {"Fecha", "Lugar", "Ingreso", "Ini. Almuerzo", "Fin Almuerzo", "Salida", "H. Lab.", "Tarifa", "Total Dia"};
+            String[] headers = {"Date", "Workplace", "Clock In", "Lunch Start", "Lunch End", "Clock Out", "Hours", "Rate", "Daily Total"};
             Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8);
             for (String header : headers) {
                 PdfPCell cell = new PdfPCell(new Phrase(header, headerFont));
@@ -220,21 +220,21 @@ public class FileExportService {
             }
             document.add(table);
 
-            // Resumen Semanal
+            // Weekly Summary
             PdfPTable summaryTable = new PdfPTable(4);
             summaryTable.setWidthPercentage(100);
             summaryTable.setSpacingBefore(5);
             summaryTable.getDefaultCell().setBorder(Rectangle.NO_BORDER);
             summaryTable.getDefaultCell().setHorizontalAlignment(Element.ALIGN_RIGHT);
-            summaryTable.addCell(new Phrase("H. Regulares: " + String.format("%.2f", weeklySummary.getRegularHours())));
-            summaryTable.addCell(new Phrase("H. Extras: " + String.format("%.2f", weeklySummary.getOvertimeHours())));
-            summaryTable.addCell(new Phrase("H. Totales: " + String.format("%.2f", weeklySummary.getTotalHours())));
-            summaryTable.addCell(new Phrase("Pago Semanal: " + String.format("$%.2f", weeklySummary.getTotalPay()), FontFactory.getFont(FontFactory.HELVETICA_BOLD)));
+            summaryTable.addCell(new Phrase("Regular Hrs: " + String.format("%.2f", weeklySummary.getRegularHours())));
+            summaryTable.addCell(new Phrase("Overtime Hrs: " + String.format("%.2f", weeklySummary.getOvertimeHours())));
+            summaryTable.addCell(new Phrase("Total Hrs: " + String.format("%.2f", weeklySummary.getTotalHours())));
+            summaryTable.addCell(new Phrase("Weekly Pay: " + String.format("$%.2f", weeklySummary.getTotalPay()), FontFactory.getFont(FontFactory.HELVETICA_BOLD)));
             document.add(summaryTable);
             document.add(Chunk.NEWLINE);
         }
 
-        // Pie de pagina para firmas
+        // Signature footer
         document.add(Chunk.NEWLINE);
         document.add(Chunk.NEWLINE);
 
@@ -243,12 +243,12 @@ public class FileExportService {
         signatureTable.setHorizontalAlignment(Element.ALIGN_CENTER);
         signatureTable.getDefaultCell().setBorder(Rectangle.NO_BORDER);
 
-        PdfPCell elaboratedCell = new PdfPCell(new Paragraph("\n\n\n______________________________\nElaborado por"));
+        PdfPCell elaboratedCell = new PdfPCell(new Paragraph("\n\n\n______________________________\nPrepared by"));
         elaboratedCell.setBorder(Rectangle.NO_BORDER);
         elaboratedCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         signatureTable.addCell(elaboratedCell);
 
-        PdfPCell receivedCell = new PdfPCell(new Paragraph("\n\n\n______________________________\nRecibido por (Firma del Trabajador)"));
+        PdfPCell receivedCell = new PdfPCell(new Paragraph("\n\n\n______________________________\nReceived by (Worker Signature)"));
         receivedCell.setBorder(Rectangle.NO_BORDER);
         receivedCell.setHorizontalAlignment(Element.ALIGN_CENTER);
         signatureTable.addCell(receivedCell);
@@ -262,14 +262,14 @@ public class FileExportService {
     public ByteArrayInputStream generateDetailedExcel(DetailedPayrollReportDto report) throws IOException {
         XSSFWorkbook workbook = new XSSFWorkbook();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        XSSFSheet sheet = workbook.createSheet("Reporte Detallado");
+        XSSFSheet sheet = workbook.createSheet("Detailed Report");
 
         CellStyle headerStyle = workbook.createCellStyle();
         XSSFFont headerFont = workbook.createFont();
         headerFont.setBold(true);
         headerStyle.setFont(headerFont);
 
-        String[] headers = {"Fecha", "Lugar de Trabajo", "Ingreso", "Inicio Almuerzo", "Fin Almuerzo", "Salida", "Horas Laboradas", "Tarifa", "Total Dia"};
+        String[] headers = {"Date", "Workplace", "Clock In", "Lunch Start", "Lunch End", "Clock Out", "Hours Worked", "Rate", "Daily Total"};
         Row headerRow = sheet.createRow(0);
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
@@ -296,7 +296,7 @@ public class FileExportService {
             }
 
             Row summaryRow = sheet.createRow(rowIdx++);
-            summaryRow.createCell(5).setCellValue("Resumen Semana:");
+            summaryRow.createCell(5).setCellValue("Weekly Summary:");
             summaryRow.createCell(6).setCellValue(weeklySummary.getTotalHours());
             summaryRow.createCell(8).setCellValue(weeklySummary.getTotalPay().doubleValue());
 
