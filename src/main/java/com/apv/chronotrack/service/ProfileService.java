@@ -68,6 +68,7 @@ public class ProfileService {
 
         return UpdateProfileRequestDto.builder()
                 .fullName(user.getFullName())
+                .email(user.getEmail())
                 .streetAddress(w9Data.streetAddress())
                 .cityStateZip(w9Data.cityStateZip())
                 .ssn(w9Data.ssn())

@@ -11,6 +11,7 @@ public class UpdateProfileRequestDto {
 
     // Datos del Perfil Básico
     private String fullName;
+    private String email;
 
     // Nueva contraseña (opcional)
     @Size(min = 8, message = "La nueva contraseña debe tener al menos 8 caracteres.")

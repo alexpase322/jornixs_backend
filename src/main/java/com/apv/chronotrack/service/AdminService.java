@@ -41,8 +41,8 @@ public class AdminService {
         User freshAdmin = findFreshUser(admin);
         Company company = freshAdmin.getCompany();
 
-        // ... (Lógica de totalWorkers y activeWorkersToday)
-        long totalWorkers = userRepository.countByCompany(company);
+        // Solo cuenta trabajadores, no incluye el admin
+        long totalWorkers = userRepository.countByCompanyAndRole_RoleName(company, RoleName.ROLE_TRABAJADOR);
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = LocalDate.now().plusDays(1).atStartOfDay();
         long activeWorkersToday = timeLogRepository.countActiveWorkersBetween(company, startOfDay, endOfDay);
