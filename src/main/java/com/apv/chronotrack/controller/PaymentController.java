@@ -132,25 +132,29 @@ public class PaymentController {
     }
 
     @PostMapping("/create-portal-session")
+    @PreAuthorize("hasAuthority('ROLE_ADMINISTRADOR')")
     public ResponseEntity<Map<String, String>> createPortalSession(@AuthenticationPrincipal User user) throws StripeException {
-        // 1. Obtenemos la compañía del usuario actual
+        if (user == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "No autenticado."));
+        }
+
         User freshUser = userRepository.findById(user.getId()).orElseThrow();
         Company company = freshUser.getCompany();
 
-        // VALIDACIÓN: Necesitamos el Customer ID de Stripe (lo guardamos en el primer pago)
         if (company.getStripeCustomerId() == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "No tienes una suscripción activa vinculada."));
+            return ResponseEntity.badRequest().body(Map.of("error", "No tienes una suscripcion activa vinculada."));
         }
 
-        // 2. Configuramos la sesión del portal
-        SessionCreateParams params = SessionCreateParams.builder()
-                .setCustomer(company.getStripeCustomerId()) // El ID del cliente (cus_...)
-                .setReturnUrl(frontendUrl + "/worker/dashboard") // A donde vuelven al salir
-                .build();
+        // Billing Portal Session (diferente de Checkout Session)
+        com.stripe.param.billingportal.SessionCreateParams portalParams =
+                com.stripe.param.billingportal.SessionCreateParams.builder()
+                        .setCustomer(company.getStripeCustomerId())
+                        .setReturnUrl(frontendUrl + "/admin/company")
+                        .build();
 
-        // 3. Generamos el enlace
-        Session session = Session.create(params);
+        com.stripe.model.billingportal.Session portalSession =
+                com.stripe.model.billingportal.Session.create(portalParams);
 
-        return ResponseEntity.ok(Map.of("url", session.getUrl()));
+        return ResponseEntity.ok(Map.of("url", portalSession.getUrl()));
     }
 }
