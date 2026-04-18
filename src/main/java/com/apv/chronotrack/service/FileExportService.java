@@ -38,12 +38,13 @@ public class FileExportService {
 
     // --- SHARED METHOD: Header with logo + company info ---
     private void addCompanyHeader(Document document, String logoUrl, String companyName, String companyAddress, String companyPhoneNumber) throws DocumentException {
+        // Narrow logo column + left-aligned info = company info sits close to logo
         PdfPTable headerTable = new PdfPTable(2);
         headerTable.setWidthPercentage(100);
-        headerTable.setWidths(new float[]{1, 3});
+        headerTable.setWidths(new float[]{1, 6});
         headerTable.getDefaultCell().setBorder(Rectangle.NO_BORDER);
 
-        // Logo from Cloudinary URL
+        // Logo from Cloudinary URL (right-aligned in its cell so it sits next to info)
         try {
             if (logoUrl != null && !logoUrl.isBlank()) {
                 Image logo = Image.getInstance(new URL(logoUrl));
@@ -51,6 +52,7 @@ public class FileExportService {
                 PdfPCell logoCell = new PdfPCell(logo);
                 logoCell.setBorder(Rectangle.NO_BORDER);
                 logoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                logoCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
                 headerTable.addCell(logoCell);
             } else {
                 PdfPCell placeholderCell = new PdfPCell(new Phrase(""));
@@ -64,23 +66,34 @@ public class FileExportService {
             headerTable.addCell(placeholderCell);
         }
 
-        // Company info
+        // Company info — left-aligned, vertically centered, sits right next to the logo
         PdfPCell companyInfoCell = new PdfPCell();
         companyInfoCell.setBorder(Rectangle.NO_BORDER);
-        companyInfoCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        companyInfoCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        companyInfoCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        companyInfoCell.setPaddingLeft(8f);
         companyInfoCell.addElement(new Phrase(
                 companyName != null ? companyName : "",
                 FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14)));
         if (companyAddress != null) {
-            companyInfoCell.addElement(new Phrase("\n" + companyAddress));
+            companyInfoCell.addElement(new Phrase(companyAddress));
         }
         if (companyPhoneNumber != null) {
-            companyInfoCell.addElement(new Phrase("\nPhone: " + companyPhoneNumber));
+            companyInfoCell.addElement(new Phrase("Phone: " + companyPhoneNumber));
         }
         headerTable.addCell(companyInfoCell);
 
         document.add(headerTable);
         document.add(Chunk.NEWLINE);
+    }
+
+    // Helper to build centered cells for table bodies
+    private PdfPCell centeredCell(String text, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(4f);
+        return cell;
     }
 
     public ByteArrayInputStream generateConsolidatedPdf(ConsolidatedPayrollReportDto report) throws DocumentException {
@@ -116,12 +129,13 @@ public class FileExportService {
             table.addCell(cell);
         }
 
+        Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 10);
         for (ConsolidatedPayrollEntryDto entry : report.getEntries()) {
-            table.addCell(entry.getWorkerName());
-            table.addCell(String.format("%.2f", entry.getTotalRegularHours()));
-            table.addCell(String.format("%.2f", entry.getTotalOvertimeHours()));
-            table.addCell(String.format("%.2f", entry.getTotalHours()));
-            table.addCell(String.format("$%.2f", entry.getTotalPay()));
+            table.addCell(centeredCell(entry.getWorkerName(), bodyFont));
+            table.addCell(centeredCell(String.format("%.2f", entry.getTotalRegularHours()), bodyFont));
+            table.addCell(centeredCell(String.format("%.2f", entry.getTotalOvertimeHours()), bodyFont));
+            table.addCell(centeredCell(String.format("%.2f", entry.getTotalHours()), bodyFont));
+            table.addCell(centeredCell(String.format("$%.2f", entry.getTotalPay()), bodyFont));
         }
 
         document.add(table);
@@ -129,7 +143,7 @@ public class FileExportService {
         document.add(Chunk.NEWLINE);
         Font totalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
         Paragraph total = new Paragraph("Grand Total: $" + report.getGrandTotalPay(), totalFont);
-        total.setAlignment(Element.ALIGN_RIGHT);
+        total.setAlignment(Element.ALIGN_CENTER);
         document.add(total);
 
         document.close();
@@ -189,7 +203,9 @@ public class FileExportService {
         // Weekly hours tables
         for (WeeklyPaySummaryDto weeklySummary : report.getWeeklySummaries()) {
             Font weekFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
-            document.add(new Paragraph("Week: " + weeklySummary.getWorkWeek().getStartDate().format(US_DATE_FORMAT) + " - " + weeklySummary.getWorkWeek().getEndDate().format(US_DATE_FORMAT), weekFont));
+            Paragraph weekHeader = new Paragraph("Week: " + weeklySummary.getWorkWeek().getStartDate().format(US_DATE_FORMAT) + " - " + weeklySummary.getWorkWeek().getEndDate().format(US_DATE_FORMAT), weekFont);
+            weekHeader.setAlignment(Element.ALIGN_CENTER);
+            document.add(weekHeader);
 
             PdfPTable table = new PdfPTable(9);
             table.setWidthPercentage(100);
@@ -206,17 +222,17 @@ public class FileExportService {
 
             List<DailySummaryDto> dailySummaries = report.getDailySummariesByWeek().get(weeklySummary.getWorkWeek().getId());
             if (dailySummaries != null) {
+                Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 8);
                 for (DailySummaryDto daily : dailySummaries) {
-                    Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 8);
-                    table.addCell(new Phrase(daily.getDate().format(US_DATE_FORMAT), bodyFont));
-                    table.addCell(new Phrase(daily.getWorkLocationName() != null ? daily.getWorkLocationName() : "N/A", bodyFont));
-                    table.addCell(new Phrase(daily.getClockInTime() != null ? daily.getClockInTime().toString().substring(0, 5) : "-", bodyFont));
-                    table.addCell(new Phrase(daily.getStartLunchTime() != null ? daily.getStartLunchTime().toString().substring(0, 5) : "-", bodyFont));
-                    table.addCell(new Phrase(daily.getEndLunchTime() != null ? daily.getEndLunchTime().toString().substring(0, 5) : "-", bodyFont));
-                    table.addCell(new Phrase(daily.getClockOutTime() != null ? daily.getClockOutTime().toString().substring(0, 5) : "-", bodyFont));
-                    table.addCell(new Phrase(String.format("%.2f", daily.getTotalHours()), bodyFont));
-                    table.addCell(new Phrase(String.format("$%.2f", daily.getDailyRate()), bodyFont));
-                    table.addCell(new Phrase(String.format("$%.2f", daily.getTotalPay()), bodyFont));
+                    table.addCell(centeredCell(daily.getDate().format(US_DATE_FORMAT), bodyFont));
+                    table.addCell(centeredCell(daily.getWorkLocationName() != null ? daily.getWorkLocationName() : "N/A", bodyFont));
+                    table.addCell(centeredCell(daily.getClockInTime() != null ? daily.getClockInTime().toString().substring(0, 5) : "-", bodyFont));
+                    table.addCell(centeredCell(daily.getStartLunchTime() != null ? daily.getStartLunchTime().toString().substring(0, 5) : "-", bodyFont));
+                    table.addCell(centeredCell(daily.getEndLunchTime() != null ? daily.getEndLunchTime().toString().substring(0, 5) : "-", bodyFont));
+                    table.addCell(centeredCell(daily.getClockOutTime() != null ? daily.getClockOutTime().toString().substring(0, 5) : "-", bodyFont));
+                    table.addCell(centeredCell(String.format("%.2f", daily.getTotalHours()), bodyFont));
+                    table.addCell(centeredCell(String.format("$%.2f", daily.getDailyRate()), bodyFont));
+                    table.addCell(centeredCell(String.format("$%.2f", daily.getTotalPay()), bodyFont));
                 }
             }
             document.add(table);
@@ -226,7 +242,7 @@ public class FileExportService {
             summaryTable.setWidthPercentage(100);
             summaryTable.setSpacingBefore(5);
             summaryTable.getDefaultCell().setBorder(Rectangle.NO_BORDER);
-            summaryTable.getDefaultCell().setHorizontalAlignment(Element.ALIGN_RIGHT);
+            summaryTable.getDefaultCell().setHorizontalAlignment(Element.ALIGN_CENTER);
             summaryTable.addCell(new Phrase("Regular Hrs: " + String.format("%.2f", weeklySummary.getRegularHours())));
             summaryTable.addCell(new Phrase("Overtime Hrs: " + String.format("%.2f", weeklySummary.getOvertimeHours())));
             summaryTable.addCell(new Phrase("Total Hrs: " + String.format("%.2f", weeklySummary.getTotalHours())));
