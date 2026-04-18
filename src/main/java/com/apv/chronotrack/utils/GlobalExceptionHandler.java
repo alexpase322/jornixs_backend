@@ -64,6 +64,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public Map<String, String> handleGenericException(Exception ex) {
         log.error("Error inesperado: {}", ex.getMessage(), ex);
-        return Map.of("message", "Ha ocurrido un error inesperado. Por favor, intente nuevamente.");
+        return Map.of("message", "An unexpected error has occurred. Please try again.");
     }
 }

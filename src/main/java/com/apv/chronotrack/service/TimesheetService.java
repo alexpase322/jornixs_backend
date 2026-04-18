@@ -34,13 +34,13 @@ public class TimesheetService {
     public void submitTimesheet(User user, Long workWeekId) {
         User freshUser = findFreshUser(user);
         WorkWeek workWeek = workWeekRepository.findById(workWeekId)
-                .orElseThrow(() -> new EntityNotFoundException("Semana de trabajo no encontrada."));
+                .orElseThrow(() -> new EntityNotFoundException("Work week not found."));
 
         WeeklyTimesheet timesheet = timesheetRepository.findByUserAndWorkWeek(freshUser, workWeek)
-                .orElseThrow(() -> new EntityNotFoundException("Hoja de horas no encontrada para esta semana."));
+                .orElseThrow(() -> new EntityNotFoundException("Timesheet not found for this week."));
 
         if (timesheet.getStatus() != TimesheetStatus.OPEN) {
-            throw new IllegalStateException("Esta hoja de horas no se puede enviar porque no está en estado 'Abierta'.");
+            throw new IllegalStateException("This timesheet cannot be submitted because it is not in 'Open' status.");
         }
         timesheet.setStatus(TimesheetStatus.SUBMITTED);
         timesheet.setSubmittedAt(LocalDateTime.now());
@@ -51,7 +51,7 @@ public class TimesheetService {
                 "TIMESHEET_SUBMITTED",
                 WeeklyTimesheet.class.getSimpleName(),
                 timesheet.getId(),
-                "El trabajador envió su hoja de horas."
+                "Worker submitted their timesheet."
         );
 
         timesheetRepository.save(timesheet);
@@ -66,7 +66,7 @@ public class TimesheetService {
         WeeklyTimesheet timesheet = findTimesheetAndVerifyCompany(timesheetId, freshAdmin);
         WeeklyTimesheet savedTimesheet = timesheetRepository.save(timesheet);
         if (timesheet.getStatus() != TimesheetStatus.SUBMITTED) {
-            throw new IllegalStateException("Solo se pueden aprobar hojas de horas que han sido enviadas.");
+            throw new IllegalStateException("Only submitted timesheets can be approved.");
         }
         auditService.logAction(
                 admin,
@@ -74,7 +74,7 @@ public class TimesheetService {
                 "TIMESHEET_APPROVED",
                 WeeklyTimesheet.class.getSimpleName(),
                 savedTimesheet.getId(),
-                "Hoja de horas aprobada para " + savedTimesheet.getUser().getFullName()
+                "Timesheet approved for " + savedTimesheet.getUser().getFullName()
         );
         timesheet.setStatus(TimesheetStatus.APPROVED);
         timesheet.setApprovedAt(LocalDateTime.now());
@@ -88,14 +88,14 @@ public class TimesheetService {
     @Transactional
     public void rejectTimesheet(Long timesheetId, String reason, User admin) {
         if (reason == null || reason.trim().isEmpty()) {
-            throw new IllegalArgumentException("Se requiere un motivo para rechazar la hoja de horas.");
+            throw new IllegalArgumentException("A reason is required to reject the timesheet.");
         }
 
         User freshAdmin = findFreshUser(admin);
         WeeklyTimesheet timesheet = findTimesheetAndVerifyCompany(timesheetId, freshAdmin);
 
         if (timesheet.getStatus() != TimesheetStatus.SUBMITTED) {
-            throw new IllegalStateException("Solo se pueden rechazar hojas de horas que han sido enviadas.");
+            throw new IllegalStateException("Only submitted timesheets can be rejected.");
         }
 
         timesheet.setStatus(TimesheetStatus.REJECTED);
@@ -108,7 +108,7 @@ public class TimesheetService {
                 "TIMESHEET_REJECTED",
                 WeeklyTimesheet.class.getSimpleName(),
                 savedTimesheet.getId(),
-                "Hoja de horas rechazada para: " + savedTimesheet.getUser().getFullName() + ". Motivo: " + reason
+                "Timesheet rejected for: " + savedTimesheet.getUser().getFullName() + ". Reason: " + reason
         );
         emailService.sendRejectionNotification(savedTimesheet);
         timesheetRepository.save(timesheet);

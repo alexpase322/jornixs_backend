@@ -47,7 +47,7 @@ public class WorkLocationService {
                 "WORK_LOCATION_CREATED",
                 WorkLocation.class.getSimpleName(),
                 savedLocation.getId(),
-                "Se creó el lugar de trabajo: " + savedLocation.getName()
+                "Work location created: " + savedLocation.getName()
         );
         return convertToDto(savedLocation);
     }
@@ -80,7 +80,7 @@ public class WorkLocationService {
                 "WORK_LOCATION_UPDATED",
                 WorkLocation.class.getSimpleName(),
                 location.getId(),
-                "Se actualizó el lugar de trabajo: " + location.getName()
+                "Work location updated: " + location.getName()
         );
         return convertToDto(updatedLocation);
     }
@@ -96,7 +96,7 @@ public class WorkLocationService {
                 "WORK_LOCATION_DELETED",
                 WorkLocation.class.getSimpleName(),
                 location.getId(),
-                "Se eliminó el lugar de trabajo: " + location.getName()
+                "Work location deleted: " + location.getName()
         );
         locationRepository.delete(location);
     }
@@ -104,15 +104,15 @@ public class WorkLocationService {
     // --- Métodos Privados Auxiliares ---
     private User findFreshUser(User user) {
         return userRepository.findById(user.getId())
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado."));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found."));
     }
 
     private WorkLocation findLocationAndVerifyCompany(Long locationId, User admin) {
         WorkLocation location = locationRepository.findById(locationId)
-                .orElseThrow(() -> new EntityNotFoundException("Lugar de trabajo no encontrado con ID: " + locationId));
+                .orElseThrow(() -> new EntityNotFoundException("Work location not found with ID: " + locationId));
 
         if (!location.getCompany().getId().equals(admin.getCompany().getId())) {
-            throw new SecurityException("Acceso denegado: Este lugar de trabajo no pertenece a tu compañía.");
+            throw new SecurityException("Access denied: this work location does not belong to your company.");
         }
         return location;
     }
@@ -155,7 +155,7 @@ public class WorkLocationService {
         }
 
         if (hasLatitude != hasLongitude) {
-            throw new IllegalArgumentException("Debes enviar latitud y longitud juntas, o ninguna para geocodificar por dirección.");
+            throw new IllegalArgumentException("You must provide both latitude and longitude together, or neither to geocode by address.");
         }
 
         return geocodingService.geocodeAddress(request.getAddress());

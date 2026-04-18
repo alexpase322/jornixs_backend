@@ -8,14 +8,14 @@ import java.math.BigDecimal;
 
 @Data
 public class UpdateWorkerRequestDto {
-    @NotBlank(message = "El nombre completo no puede estar vacío.")
+    @NotBlank(message = "Full name cannot be empty.")
     private String fullName;
 
-    @NotNull(message = "La tarifa por hora no puede ser nula.")
-    @DecimalMin(value = "0.0", inclusive = false, message = "La tarifa por hora debe ser mayor que cero.")
+    @NotNull(message = "Hourly rate cannot be null.")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Hourly rate must be greater than zero.")
     private BigDecimal hourlyRate;
 
-    @NotNull(message = "El estado de actividad no puede ser nulo.")
+    @NotNull(message = "Active status cannot be null.")
     private boolean isActive;
 
     private Long workLocationId;

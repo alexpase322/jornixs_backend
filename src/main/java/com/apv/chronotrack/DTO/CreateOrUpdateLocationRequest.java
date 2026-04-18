@@ -6,17 +6,17 @@ import lombok.Data;
 
 @Data
 public class CreateOrUpdateLocationRequest {
-    @NotBlank(message = "El nombre no puede estar vacío.")
+    @NotBlank(message = "Name cannot be empty.")
     private String name;
 
     private String address;
 
-    // Opcional: si no se envía, se intentará obtener desde la dirección por geocodificación.
+    // Optional: if not provided, will be geocoded from address.
     private Double latitude;
 
-    // Opcional: si no se envía, se intentará obtener desde la dirección por geocodificación.
+    // Optional: if not provided, will be geocoded from address.
     private Double longitude;
 
-    @NotNull(message = "El radio del geofence es requerido.")
+    @NotNull(message = "Geofence radius is required.")
     private Double geofenceRadiusMeters;
 }

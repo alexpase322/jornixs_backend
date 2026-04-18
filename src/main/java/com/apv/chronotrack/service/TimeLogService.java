@@ -47,7 +47,7 @@ public class TimeLogService {
         WeeklyTimesheet timesheet = findOrCreateTimesheet(freshUser, workWeek);
 
         if (timesheet.getStatus() != TimesheetStatus.OPEN) {
-            throw new IllegalStateException("No se puede registrar tiempo. La hoja de horas de esta semana ya ha sido enviada o procesada.");
+            throw new IllegalStateException("Cannot record time. This week's timesheet has already been submitted or processed.");
         }
         // 1. Validar que la acción sea permitida (no hacer clock-in dos veces)
         validateAction(freshUser, EventType.INGRESO);
@@ -117,7 +117,7 @@ public class TimeLogService {
         WeeklyTimesheet timesheet = findOrCreateTimesheet(freshUser, workWeek);
 
         if (timesheet.getStatus() != TimesheetStatus.OPEN) {
-            throw new IllegalStateException("No se puede registrar tiempo. La hoja de horas de esta semana ya ha sido enviada o procesada.");
+            throw new IllegalStateException("Cannot record time. This week's timesheet has already been submitted or processed.");
         }
 
 

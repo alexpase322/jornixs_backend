@@ -10,36 +10,36 @@ import lombok.Data;
 public class CompanyRegistrationRequest {
     @NotBlank
     private String token;
-    // --- Datos de la Compañía ---
-    @NotBlank(message = "El nombre de la compañía no puede estar vacío.")
+
+    // --- Company Data ---
+    @NotBlank(message = "Company name cannot be empty.")
     private String companyName;
 
-    @NotBlank(message = "La dirección de la compañía no puede estar vacía.")
+    @NotBlank(message = "Company address cannot be empty.")
     private String companyAddress;
-
 
     private String companyPhoneNumber;
 
-    @NotBlank(message = "El EIN de la compañía no puede estar vacío.")
-    private String ein; // Employer Identification Number (TIN de la empresa)
+    @NotBlank(message = "Company EIN cannot be empty.")
+    private String ein; // Employer Identification Number
 
-    // --- Datos del Administrador ---
-    @NotBlank(message = "El nombre del administrador no puede estar vacío.")
+    // --- Administrator Data ---
+    @NotBlank(message = "Administrator name cannot be empty.")
     private String adminFullName;
 
-    @NotBlank(message = "El email del administrador no puede estar vacío.")
-    @Email(message = "El formato del email no es válido.")
+    @NotBlank(message = "Administrator email cannot be empty.")
+    @Email(message = "Invalid email format.")
     private String adminEmail;
 
-    @NotBlank(message = "La contraseña no puede estar vacía.")
-    @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres.")
+    @NotBlank(message = "Password cannot be empty.")
+    @Size(min = 8, message = "Password must be at least 8 characters long.")
     private String adminPassword;
 
     private Double workLatitude;
     private Double workLongitude;
     private Double geofenceRadiusMeters;
 
-    @AssertTrue(message = "Debes aceptar los términos y condiciones.")
+    @AssertTrue(message = "You must accept the terms and conditions.")
     private boolean termsAccepted;
 
     private String logoUrl;

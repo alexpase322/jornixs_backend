@@ -264,9 +264,9 @@ public class AdminService {
         });
         if (request.getWorkLocationId() != null) {
             WorkLocation newLocation = workLocationRepository.findById(request.getWorkLocationId())
-                    .orElseThrow(() -> new EntityNotFoundException("Lugar de trabajo no encontrado."));
+                    .orElseThrow(() -> new EntityNotFoundException("Work location not found."));
             if (!newLocation.getCompany().getId().equals(admin.getCompany().getId())) {
-                throw new SecurityException("Acceso denegado.");
+                throw new SecurityException("Access denied.");
             }
             UserWorkLocationAssignment newAssignment = new UserWorkLocationAssignment();
             newAssignment.setUser(worker);
@@ -291,14 +291,14 @@ public class AdminService {
         WorkWeek workWeek = findOrCreateWorkWeekForDate(request.getTimestamp().toLocalDate(), worker.getCompany());
         WeeklyTimesheet timesheet = findOrCreateTimesheet(worker, workWeek);
         if (timesheet.getStatus() == TimesheetStatus.APPROVED) {
-            throw new IllegalStateException("Acción denegada: No se puede modificar un registro de una semana que ya ha sido aprobada.");
+            throw new IllegalStateException("Action denied: cannot modify a record from an already approved week.");
         }
         TimeLog timeLog;
         if (request.getTimeLogIdToEdit() != null) {
             timeLog = timeLogRepository.findById(request.getTimeLogIdToEdit())
-                    .orElseThrow(() -> new EntityNotFoundException("Registro de tiempo no encontrado."));
+                    .orElseThrow(() -> new EntityNotFoundException("Time log record not found."));
             if (!timeLog.getUser().getId().equals(worker.getId())) {
-                throw new SecurityException("Este registro de tiempo no pertenece al trabajador especificado.");
+                throw new SecurityException("This time log does not belong to the specified worker.");
             }
             timeLog.setEventType(request.getEventType());
             timeLog.setTimestamp(request.getTimestamp());
@@ -316,11 +316,11 @@ public class AdminService {
     @Transactional
     public void deleteTimeLog(Long timeLogId, User admin) {
         TimeLog timeLog = timeLogRepository.findById(timeLogId)
-                .orElseThrow(() -> new EntityNotFoundException("Registro de tiempo no encontrado."));
+                .orElseThrow(() -> new EntityNotFoundException("Time log record not found."));
         findWorkerAndVerifyCompany(timeLog.getUser().getId(), admin);
         WeeklyTimesheet timesheet = findOrCreateTimesheet(timeLog.getUser(), timeLog.getWorkWeek());
         if (timesheet.getStatus() == TimesheetStatus.APPROVED) {
-            throw new IllegalStateException("Acción denegada: No se puede eliminar un registro de una semana que ya ha sido aprobada.");
+            throw new IllegalStateException("Action denied: cannot delete a record from an already approved week.");
         }
         timeLogRepository.delete(timeLog);
     }
@@ -384,9 +384,9 @@ public class AdminService {
 
     private User findWorkerAndVerifyCompany(Long workerId, User admin) {
         User worker = userRepository.findById(workerId)
-                .orElseThrow(() -> new EntityNotFoundException("Trabajador no encontrado con ID: " + workerId));
+                .orElseThrow(() -> new EntityNotFoundException("Worker not found with ID: " + workerId));
         if (!worker.getCompany().getId().equals(admin.getCompany().getId())) {
-            throw new SecurityException("Acceso denegado: No tienes permiso para modificar este trabajador.");
+            throw new SecurityException("Access denied: you do not have permission to modify this worker.");
         }
         return worker;
     }

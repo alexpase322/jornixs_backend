@@ -31,7 +31,7 @@ public class GeocodingService {
 
     public GeocodingResult geocodeAddress(String address) {
         if (!StringUtils.hasText(address)) {
-            throw new IllegalArgumentException("Debes proporcionar una dirección válida para geocodificar.");
+            throw new IllegalArgumentException("You must provide a valid address to geocode.");
         }
 
         RestTemplate restTemplate = restTemplateBuilder.build();
@@ -55,7 +55,7 @@ public class GeocodingService {
         try {
             JsonNode root = objectMapper.readTree(response.getBody());
             if (!root.isArray() || root.isEmpty()) {
-                throw new IllegalArgumentException("No se encontró una ubicación para la dirección proporcionada.");
+                throw new IllegalArgumentException("No location found for the provided address.");
             }
 
             JsonNode first = root.get(0);
@@ -65,7 +65,7 @@ public class GeocodingService {
 
             return new GeocodingResult(latitude, longitude, normalizedAddress);
         } catch (Exception ex) {
-            throw new IllegalStateException("No fue posible geocodificar la dirección en este momento.", ex);
+            throw new IllegalStateException("Could not geocode the address at this time.", ex);
         }
     }
 

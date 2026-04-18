@@ -9,18 +9,18 @@ import lombok.Data;
 @Builder
 public class UpdateProfileRequestDto {
 
-    // Datos del Perfil Básico
+    // Basic Profile Data
     private String fullName;
     private String email;
 
-    // Nueva contraseña (opcional)
-    @Size(min = 8, message = "La nueva contraseña debe tener al menos 8 caracteres.")
+    // New password (optional)
+    @Size(min = 8, message = "New password must be at least 8 characters long.")
     private String newPassword;
 
-    // Datos del W-9 y Dirección
+    // W-9 and Address Data
     private String streetAddress;
     private String cityStateZip;
 
-    @Pattern(regexp = "^(?!000|666)[0-8][0-9]{2}-(?!00)[0-9]{2}-(?!0000)[0-9]{4}$", message = "El formato del SSN debe ser ###-##-####.")
+    @Pattern(regexp = "^(?!000|666)[0-8][0-9]{2}-(?!00)[0-9]{2}-(?!0000)[0-9]{4}$", message = "SSN format must be ###-##-####.")
     private String ssn;
 }

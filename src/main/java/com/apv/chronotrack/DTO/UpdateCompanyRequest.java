@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class UpdateCompanyRequest {
-    @NotBlank(message = "El nombre de la empresa no puede estar vacio.")
+    @NotBlank(message = "Company name cannot be empty.")
     private String companyName;
 
     private String address;

@@ -90,7 +90,7 @@ public class PaymentController {
         Company company = freshAdmin.getCompany();
 
         if (company.getStripeSubscriptionId() == null) {
-            throw new IllegalStateException("No se encontró información de la suscripción.");
+            throw new IllegalStateException("Subscription information not found.");
         }
 
         // 1. Decirle a Stripe que cancele la suscripción al final del período
@@ -104,7 +104,7 @@ public class PaymentController {
         company.setSubscriptionStatus(SubscriptionStatus.CANCELED);
         companyRepository.save(company);
 
-        return ResponseEntity.ok("Tu suscripción ha sido cancelada y permanecerá activa hasta el final de tu ciclo de facturación.");
+        return ResponseEntity.ok("Your subscription has been canceled and will remain active until the end of your billing cycle.");
     }
 
     @GetMapping("/session/{sessionId}")
@@ -135,14 +135,14 @@ public class PaymentController {
     @PreAuthorize("hasAuthority('ROLE_ADMINISTRADOR')")
     public ResponseEntity<Map<String, String>> createPortalSession(@AuthenticationPrincipal User user) throws StripeException {
         if (user == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "No autenticado."));
+            return ResponseEntity.status(401).body(Map.of("error", "Not authenticated."));
         }
 
         User freshUser = userRepository.findById(user.getId()).orElseThrow();
         Company company = freshUser.getCompany();
 
         if (company.getStripeCustomerId() == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "No tienes una suscripcion activa vinculada."));
+            return ResponseEntity.badRequest().body(Map.of("error", "You do not have an active subscription linked."));
         }
 
         // Billing Portal Session (diferente de Checkout Session)

@@ -34,6 +34,7 @@ import java.util.List;
 public class FileExportService {
 
     private static final Logger log = LoggerFactory.getLogger(FileExportService.class);
+    private static final DateTimeFormatter US_DATE_FORMAT = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 
     // --- SHARED METHOD: Header with logo + company info ---
     private void addCompanyHeader(Document document, String logoUrl, String companyName, String companyAddress, String companyPhoneNumber) throws DocumentException {
@@ -98,7 +99,7 @@ public class FileExportService {
         title.setAlignment(Element.ALIGN_CENTER);
         document.add(title);
 
-        Paragraph period = new Paragraph("Period: " + report.getStartDate() + " to " + report.getEndDate());
+        Paragraph period = new Paragraph("Period: " + report.getStartDate().format(US_DATE_FORMAT) + " to " + report.getEndDate().format(US_DATE_FORMAT));
         period.setAlignment(Element.ALIGN_CENTER);
         document.add(period);
         document.add(Chunk.NEWLINE);
@@ -179,8 +180,8 @@ public class FileExportService {
         document.add(title);
 
         Paragraph subtitle = new Paragraph("Worker: " + report.getWorkerName() +
-                " | Period: " + report.getStartDate() + " to " + report.getEndDate() +
-                " | Generated: " + LocalDate.now().format(DateTimeFormatter.ISO_DATE));
+                " | Period: " + report.getStartDate().format(US_DATE_FORMAT) + " to " + report.getEndDate().format(US_DATE_FORMAT) +
+                " | Generated: " + LocalDate.now().format(US_DATE_FORMAT));
         subtitle.setAlignment(Element.ALIGN_CENTER);
         document.add(subtitle);
         document.add(Chunk.NEWLINE);
@@ -188,7 +189,7 @@ public class FileExportService {
         // Weekly hours tables
         for (WeeklyPaySummaryDto weeklySummary : report.getWeeklySummaries()) {
             Font weekFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
-            document.add(new Paragraph("Week: " + weeklySummary.getWorkWeek().getStartDate() + " - " + weeklySummary.getWorkWeek().getEndDate(), weekFont));
+            document.add(new Paragraph("Week: " + weeklySummary.getWorkWeek().getStartDate().format(US_DATE_FORMAT) + " - " + weeklySummary.getWorkWeek().getEndDate().format(US_DATE_FORMAT), weekFont));
 
             PdfPTable table = new PdfPTable(9);
             table.setWidthPercentage(100);
@@ -207,7 +208,7 @@ public class FileExportService {
             if (dailySummaries != null) {
                 for (DailySummaryDto daily : dailySummaries) {
                     Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 8);
-                    table.addCell(new Phrase(String.valueOf(daily.getDate()), bodyFont));
+                    table.addCell(new Phrase(daily.getDate().format(US_DATE_FORMAT), bodyFont));
                     table.addCell(new Phrase(daily.getWorkLocationName() != null ? daily.getWorkLocationName() : "N/A", bodyFont));
                     table.addCell(new Phrase(daily.getClockInTime() != null ? daily.getClockInTime().toString().substring(0, 5) : "-", bodyFont));
                     table.addCell(new Phrase(daily.getStartLunchTime() != null ? daily.getStartLunchTime().toString().substring(0, 5) : "-", bodyFont));
@@ -283,7 +284,7 @@ public class FileExportService {
             if (dailySummaries != null) {
                 for (DailySummaryDto daily : dailySummaries) {
                     Row row = sheet.createRow(rowIdx++);
-                    row.createCell(0).setCellValue(daily.getDate().toString());
+                    row.createCell(0).setCellValue(daily.getDate().format(US_DATE_FORMAT));
                     row.createCell(1).setCellValue(daily.getWorkLocationName() != null ? daily.getWorkLocationName() : "N/A");
                     row.createCell(2).setCellValue(daily.getClockInTime() != null ? daily.getClockInTime().toString().substring(0, 5) : "-");
                     row.createCell(3).setCellValue(daily.getStartLunchTime() != null ? daily.getStartLunchTime().toString().substring(0, 5) : "-");

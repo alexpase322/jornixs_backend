@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 public class GeocodeAddressRequest {
-    @NotBlank(message = "La dirección no puede estar vacía.")
+    @NotBlank(message = "Address cannot be empty.")
     private String address;
 }

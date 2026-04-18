@@ -51,29 +51,29 @@ public class AuthService {
         // 1. Obtiene al administrador autenticado que realiza la acción.
         User principalAdmin = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User admin = userRepository.findById(principalAdmin.getId())
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario administrador no encontrado."));
+                .orElseThrow(() -> new UsernameNotFoundException("Administrator user not found."));
         Company adminCompany = admin.getCompany();
         long currentWorkerCount = userRepository.countByCompanyAndRole_RoleName(adminCompany, RoleName.ROLE_TRABAJADOR);
         int planLimit = getLimitForPlan(adminCompany.getSubscriptionPlan());
 
         if (currentWorkerCount >= planLimit) {
-            throw new IllegalStateException("Has alcanzado el límite de " + planLimit + " trabajadores para tu plan '" + adminCompany.getSubscriptionPlan() + "'. Por favor, actualiza tu suscripción.");
+            throw new IllegalStateException("You have reached the limit of " + planLimit + " workers for your plan '" + adminCompany.getSubscriptionPlan() + "'. Please upgrade your subscription.");
         }
         // 2. Valida que el email no esté ya en uso.
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new IllegalStateException("El correo electrónico ya está registrado.");
+            throw new IllegalStateException("Email is already registered.");
         }
 
         // 3. Obtiene el rol por defecto para un nuevo empleado.
         Role workerRole = roleRepository.findByRoleName(RoleName.ROLE_TRABAJADOR)
-                .orElseThrow(() -> new IllegalStateException("Rol TRABAJADOR no encontrado en la base de datos."));
+                .orElseThrow(() -> new IllegalStateException("WORKER role not found in database."));
 
         String token = UUID.randomUUID().toString();
         LocalDateTime expiryDate = LocalDateTime.now().plusDays(1);
 
         if (adminCompany.getSubscriptionStatus() == SubscriptionStatus.CANCELED) {
             // Aquí podrías añadir una lógica más compleja para ver si la fecha de fin del período ya pasó
-            throw new IllegalStateException("Tu suscripción ha sido cancelada. No puedes añadir nuevos trabajadores.");
+            throw new IllegalStateException("Your subscription has been canceled. You cannot add new workers.");
         }
 
         // 4. Crea la nueva entidad de usuario con un estado inactivo.
@@ -89,10 +89,10 @@ public class AuthService {
         User savedUser = userRepository.save(newUser);
         if (request.getWorkLocationId() != null) {
             WorkLocation location = workLocationRepository.findById(request.getWorkLocationId())
-                    .orElseThrow(() -> new EntityNotFoundException("Lugar de trabajo no encontrado."));
+                    .orElseThrow(() -> new EntityNotFoundException("Work location not found."));
 
             if (!location.getCompany().getId().equals(adminCompany.getId())) {
-                throw new SecurityException("Acceso denegado: Lugar de trabajo inválido.");
+                throw new SecurityException("Access denied: invalid work location.");
             }
 
             // Creamos el nuevo registro de asignación
@@ -110,12 +110,12 @@ public class AuthService {
                 "WORKER_INVITED",
                 User.class.getSimpleName(),
                 savedUser.getId(),
-                "Se invitó al nuevo trabajador: " + savedUser.getEmail()
+                "New worker invited: " + savedUser.getEmail()
         );
         // 5. Simula el envío del correo electrónico de invitación.
         // En una aplicación real, aquí se integraría un servicio de email (como SendGrid, AWS SES, etc.)
         // para enviar un enlace único al nuevo usuario.
-        log.info("Enviando email de invitacion para completar el registro a: {}", request.getEmail());
+        log.info("Sending registration invitation email to: {}", request.getEmail());
     }
 
     /**
@@ -128,10 +128,10 @@ public class AuthService {
     public AuthResponse completeRegistration(RegistrationCompletionRequest request) {
         // 1. Busca al usuario por el email proporcionado en la invitación.
         User user = userRepository.findByRegistrationToken(request.getToken())
-                .orElseThrow(() -> new IllegalArgumentException("Token de registro inválido."));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid registration token."));
 
         if (user.getTokenExpiryDate().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("El token de registro ha expirado.");
+            throw new IllegalStateException("Registration token has expired.");
         }
         // 2. Actualiza los datos de perfil y acceso.
         user.setRegistrationToken(null);
@@ -196,21 +196,21 @@ public class AuthService {
     @Transactional
     public AuthResponse registerCompanyAndAdmin(CompanyRegistrationRequest request) {
         RegistrationInvitation invitation = invitationRepository.findByToken(request.getToken())
-                .orElseThrow(() -> new IllegalArgumentException("El token de invitación es inválido."));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid invitation token."));
 
         if (invitation.getExpiryDate().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("El token de invitación ha expirado.");
+            throw new IllegalStateException("Invitation token has expired.");
         }
 
         if (!invitation.getEmail().equalsIgnoreCase(request.getAdminEmail())) {
-            throw new SecurityException("El correo electrónico no coincide con el de la invitación.");
+            throw new SecurityException("Email does not match the invitation.");
         }
-        // 1. Validar que la compañía (por EIN) y el admin (por email) no existan.
+        // 1. Validate company (by EIN) and admin (by email) don't exist.
         if (companyRepository.findByEin(request.getEin()).isPresent()) {
-            throw new IllegalStateException("Una compañía con este EIN ya está registrada.");
+            throw new IllegalStateException("A company with this EIN is already registered.");
         }
         if (userRepository.findByEmail(request.getAdminEmail()).isPresent()) {
-            throw new IllegalStateException("Un usuario con este correo electrónico ya está registrado.");
+            throw new IllegalStateException("A user with this email is already registered.");
         }
 
         String planId = invitation.getPlanId();
@@ -235,7 +235,7 @@ public class AuthService {
 
         // 3. Obtener el rol de Administrador.
         Role adminRole = roleRepository.findByRoleName(RoleName.ROLE_ADMINISTRADOR)
-                .orElseThrow(() -> new IllegalStateException("Rol ADMINISTRADOR no encontrado."));
+                .orElseThrow(() -> new IllegalStateException("ADMINISTRATOR role not found."));
 
         // 4. Crear el usuario administrador y asociarlo a la nueva compañía.
         User adminUser = new User();
@@ -260,7 +260,7 @@ public class AuthService {
     @Transactional
     public void requestPasswordReset(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("No se encontró un usuario con ese correo electrónico."));
+                .orElseThrow(() -> new UsernameNotFoundException("No user found with that email."));
 
         String token = UUID.randomUUID().toString();
         user.setPasswordResetToken(token);
@@ -273,10 +273,10 @@ public class AuthService {
     @Transactional
     public void performPasswordReset(String token, String newPassword) {
         User user = userRepository.findByPasswordResetToken(token) // <-- Necesitaremos añadir este método al repositorio
-                .orElseThrow(() -> new IllegalArgumentException("Token inválido o no encontrado."));
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired token."));
 
         if (user.getPasswordResetTokenExpiry().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("El token de restablecimiento de contraseña ha expirado.");
+            throw new IllegalStateException("Password reset token has expired.");
         }
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
@@ -306,8 +306,8 @@ public class AuthService {
 
             default:
                 // Esto es útil para depurar: te dirá en la consola exactamente qué ID llegó
-                log.warn("ID de precio recibido desconocido: {}", priceId);
-                throw new IllegalArgumentException("ID de precio no reconocido: " + priceId);
+                log.warn("Unknown price ID received: {}", priceId);
+                throw new IllegalArgumentException("Unrecognized price ID: " + priceId);
         }
     }
 
@@ -335,7 +335,7 @@ public class AuthService {
     public void updateSubscriptionStatus(String stripeCustomerId, String status, String newPriceId) {
         // 1. Buscar la compañía por el ID de cliente de Stripe (cus_...)
         Company company = companyRepository.findByStripeCustomerId(stripeCustomerId)
-                .orElseThrow(() -> new RuntimeException("⚠️ Webhook Error: No se encontró compañía con Stripe ID: " + stripeCustomerId));
+                .orElseThrow(() -> new RuntimeException("Webhook Error: No company found with Stripe ID: " + stripeCustomerId));
 
         // 2. Actualizar el estado
         // Mapeamos el string de Stripe a tu Enum o String local
@@ -347,7 +347,7 @@ public class AuthService {
 
             // Opcional: Aquí podrías llamar a un método para actualizar límites
             // updateCompanyLimitsBasedOnPlan(company, newPriceId);
-            log.info("Plan actualizado para la empresa: {}", company.getCompanyName());
+            log.info("Plan updated for company: {}", company.getCompanyName());
         }
 
         companyRepository.save(company);
@@ -376,7 +376,7 @@ public class AuthService {
         Company company = user.getCompany();
 
         if (company == null) {
-            throw new IllegalStateException("No se encontró una compañía asociada a tu cuenta.");
+            throw new IllegalStateException("No company associated with your account.");
         }
 
         SubscriptionStatus status = company.getSubscriptionStatus();
@@ -386,7 +386,7 @@ public class AuthService {
         boolean hasStripeSubscription = company.getStripeCustomerId() != null && company.getStripeSubscriptionId() != null;
 
         if (!hasValidStatus || !hasStripeSubscription) {
-            throw new IllegalStateException("Tu empresa no tiene un pago/suscripción activa. Debes completar el pago para iniciar sesión.");
+            throw new IllegalStateException("Your company does not have an active subscription/payment. You must complete payment to log in.");
         }
     }
 }
