@@ -216,6 +216,9 @@ public class FileExportService {
             Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8);
             for (String header : headers) {
                 PdfPCell cell = new PdfPCell(new Phrase(header, headerFont));
+                cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+                cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+                cell.setPadding(4f);
                 cell.setBackgroundColor(Color.LIGHT_GRAY);
                 table.addCell(cell);
             }
