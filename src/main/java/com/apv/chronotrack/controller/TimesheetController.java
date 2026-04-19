@@ -33,7 +33,7 @@ public class TimesheetController {
             @AuthenticationPrincipal User user,
             @PathVariable Long workWeekId) {
         timesheetService.submitTimesheet(user, workWeekId);
-        return ResponseEntity.ok("Hoja de horas enviada correctamente.");
+        return ResponseEntity.ok("Timesheet submitted successfully.");
     }
 
     // --- ENDPOINTS PARA EL ADMINISTRADOR ---
@@ -46,7 +46,7 @@ public class TimesheetController {
             @AuthenticationPrincipal User admin,
             @PathVariable Long timesheetId) {
         timesheetService.approveTimesheet(timesheetId, admin);
-        return ResponseEntity.ok("Hoja de horas aprobada.");
+        return ResponseEntity.ok("Timesheet approved.");
     }
 
     /**
@@ -58,7 +58,7 @@ public class TimesheetController {
             @PathVariable Long timesheetId,
             @RequestBody RejectionRequest payload) {
         timesheetService.rejectTimesheet(timesheetId, payload.getReason(), admin);
-        return ResponseEntity.ok("Hoja de horas rechazada.");
+        return ResponseEntity.ok("Timesheet rejected.");
     }
 
     // DTO simple para recibir el motivo del rechazo
@@ -92,6 +92,6 @@ public class TimesheetController {
             @AuthenticationPrincipal User user,
             @PathVariable Long timesheetId) {
         timesheetService.resubmitTimesheet(user, timesheetId);
-        return ResponseEntity.ok("La hoja de horas ha sido reabierta para su edición.");
+        return ResponseEntity.ok("The timesheet has been reopened for editing.");
     }
 }

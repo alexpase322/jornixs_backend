@@ -35,35 +35,35 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(ResourceNotFoundException.class)
     public Map<String, String> handleResourceNotFound(ResourceNotFoundException ex) {
-        log.warn("Recurso no encontrado: {}", ex.getMessage());
+        log.warn("Resource not found: {}", ex.getMessage());
         return Map.of("message", ex.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(BusinessRuleException.class)
     public Map<String, String> handleBusinessRuleException(BusinessRuleException ex) {
-        log.warn("Regla de negocio violada: {}", ex.getMessage());
+        log.warn("Business rule violated: {}", ex.getMessage());
         return Map.of("message", ex.getMessage());
     }
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler(UnauthorizedException.class)
     public Map<String, String> handleUnauthorizedException(UnauthorizedException ex) {
-        log.warn("Acceso denegado: {}", ex.getMessage());
+        log.warn("Access denied: {}", ex.getMessage());
         return Map.of("message", ex.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({IllegalStateException.class, IllegalArgumentException.class})
     public Map<String, String> handleBusinessLogicExceptions(RuntimeException ex) {
-        log.warn("Error de logica de negocio: {}", ex.getMessage());
+        log.warn("Business logic error: {}", ex.getMessage());
         return Map.of("message", ex.getMessage());
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(Exception.class)
     public Map<String, String> handleGenericException(Exception ex) {
-        log.error("Error inesperado: {}", ex.getMessage(), ex);
+        log.error("Unexpected error: {}", ex.getMessage(), ex);
         return Map.of("message", "An unexpected error has occurred. Please try again.");
     }
 }

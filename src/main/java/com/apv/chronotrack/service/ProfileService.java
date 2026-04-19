@@ -55,7 +55,7 @@ public class ProfileService {
                 "USER_PASSWORD_CHANGED",
                 User.class.getSimpleName(),
                 user.getId(),
-                "El usuario cambió su propia contraseña."
+                "User changed their own password."
         );
     }
 

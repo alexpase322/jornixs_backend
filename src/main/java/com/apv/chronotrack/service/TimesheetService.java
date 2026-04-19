@@ -118,17 +118,16 @@ public class TimesheetService {
 
     private User findFreshUser(User user) {
         return userRepository.findById(user.getId())
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado."));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found."));
     }
 
     private WeeklyTimesheet findTimesheetAndVerifyCompany(Long timesheetId, User admin) {
         WeeklyTimesheet timesheet = timesheetRepository.findById(timesheetId)
-                .orElseThrow(() -> new EntityNotFoundException("Hoja de horas no encontrada con ID: " + timesheetId));
+                .orElseThrow(() -> new EntityNotFoundException("Timesheet not found with ID: " + timesheetId));
 
-        // Verificación de seguridad: asegurar que el admin y el trabajador del timesheet
-        // pertenezcan a la misma compañía.
+        // Security check: admin and the timesheet's worker must belong to the same company
         if (!timesheet.getUser().getCompany().getId().equals(admin.getCompany().getId())) {
-            throw new SecurityException("Acceso denegado: No tienes permiso para gestionar esta hoja de horas.");
+            throw new SecurityException("Access denied: you do not have permission to manage this timesheet.");
         }
         return timesheet;
     }
@@ -204,15 +203,15 @@ public class TimesheetService {
     public void resubmitTimesheet(User user, Long timesheetId) {
         User freshUser = findFreshUser(user);
         WeeklyTimesheet timesheet = timesheetRepository.findById(timesheetId)
-                .orElseThrow(() -> new EntityNotFoundException("Hoja de horas no encontrada."));
+                .orElseThrow(() -> new EntityNotFoundException("Timesheet not found."));
 
-        // Verificación de seguridad: un trabajador solo puede reenviar sus propias hojas
+        // Security check: a worker can only resubmit their own timesheets
         if (!timesheet.getUser().getId().equals(freshUser.getId())) {
-            throw new SecurityException("No tienes permiso para modificar esta hoja de horas.");
+            throw new SecurityException("You do not have permission to modify this timesheet.");
         }
 
         if (timesheet.getStatus() != TimesheetStatus.REJECTED) {
-            throw new IllegalStateException("Solo se pueden reenviar las hojas de horas que han sido rechazadas.");
+            throw new IllegalStateException("Only rejected timesheets can be resubmitted.");
         }
 
         // Se cambia el estado de vuelta a ABIERTA para que el trabajador pueda editarla,
@@ -226,7 +225,7 @@ public class TimesheetService {
                 "TIMESHEET_REOPENED",
                 WeeklyTimesheet.class.getSimpleName(),
                 timesheet.getId(),
-                "El trabajador reabrió una hoja de horas rechazada."
+                "Worker reopened a rejected timesheet."
         );
         timesheetRepository.save(timesheet);
     }

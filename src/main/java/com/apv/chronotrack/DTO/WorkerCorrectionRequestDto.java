@@ -8,13 +8,12 @@ import java.time.LocalDateTime;
 @Data
 public class WorkerCorrectionRequestDto {
 
-    @NotNull(message = "El tipo de evento no puede ser nulo.")
+    @NotNull(message = "Event type cannot be null.")
     private EventType eventType;
 
-    @NotNull(message = "La fecha y hora no pueden ser nulas.")
+    @NotNull(message = "Date and time cannot be null.")
     private LocalDateTime timestamp;
 
-    // Este campo es opcional. Si se envía, se edita un registro existente.
-    // Si es nulo, se crea un registro nuevo.
+    // Optional. If provided, edits an existing record. If null, creates a new one.
     private Long timeLogIdToEdit;
 }

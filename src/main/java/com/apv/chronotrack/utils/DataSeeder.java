@@ -30,7 +30,7 @@ public class DataSeeder implements CommandLineRunner {
             Role workerRole = new Role();
             workerRole.setRoleName(RoleName.ROLE_TRABAJADOR);
             roleRepository.save(workerRole);
-            log.info("Rol TRABAJADOR creado.");
+            log.info("WORKER role created.");
         }
 
         // Revisa si el rol de administrador ya existe. Si no, lo crea.
@@ -38,7 +38,7 @@ public class DataSeeder implements CommandLineRunner {
             Role adminRole = new Role();
             adminRole.setRoleName(RoleName.ROLE_ADMINISTRADOR);
             roleRepository.save(adminRole);
-            log.info("Rol ADMINISTRADOR creado.");
+            log.info("ADMINISTRATOR role created.");
         }
     }
 }

@@ -5,9 +5,9 @@ import lombok.Data;
 
 @Data
 public class ClockInRequestDto {
-    @NotNull(message = "La latitud es requerida.")
+    @NotNull(message = "Latitude is required.")
     private Double latitude;
 
-    @NotNull(message = "La longitud es requerida.")
+    @NotNull(message = "Longitude is required.")
     private Double longitude;
 }

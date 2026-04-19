@@ -25,7 +25,7 @@ public class ProfileController {
             @Valid @RequestBody UpdateProfileRequestDto request) {
 
         profileService.updateUserProfile(user, request);
-        return ResponseEntity.ok("Perfil actualizado correctamente.");
+        return ResponseEntity.ok("Profile updated successfully.");
     }
 
     @GetMapping

@@ -36,7 +36,7 @@ public class AuthController {
     @PostMapping("/invite")
     public ResponseEntity<String> inviteUser(@Valid @RequestBody InviteRequest request) {
         authService.inviteUser(request);
-        return ResponseEntity.ok("Invitación enviada correctamente.");
+        return ResponseEntity.ok("Invitation sent successfully.");
     }
 
     @PostMapping("/register-company")
@@ -47,12 +47,12 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody Map<String, String> payload) {
         authService.requestPasswordReset(payload.get("email"));
-        return ResponseEntity.ok("Si el correo electrónico existe en nuestro sistema, se ha enviado un enlace para restablecer la contraseña.");
+        return ResponseEntity.ok("If the email exists in our system, a password reset link has been sent.");
     }
 
     @PostMapping("/reset-password")
     public ResponseEntity<String> resetPassword(@Valid @RequestBody PasswordResetRequest request) {
         authService.performPasswordReset(request.getToken(), request.getNewPassword());
-        return ResponseEntity.ok("La contraseña ha sido actualizada correctamente.");
+        return ResponseEntity.ok("Password updated successfully.");
     }
 }

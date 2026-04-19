@@ -34,13 +34,13 @@ public class TimeLogService {
     public TimeLogDTO recordClockIn(User user, ClockInRequestDto request) {
 
         User freshUser = userRepository.findById(user.getId())
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
         boolean alreadyClockedInToday = timeLogRepository.existsByUserAndEventTypeAndTimestampBetween(freshUser, EventType.INGRESO, startOfDay, endOfDay);
 
         if (alreadyClockedInToday) {
-            throw new IllegalStateException("Ya has marcado tu ingreso hoy. No puedes marcar el ingreso más de una vez por día.");
+            throw new IllegalStateException("You have already clocked in today. You cannot clock in more than once per day.");
         }
         // --- LÓGICA DE VALIDACIÓN DE HOJA DE HORAS ---
         WorkWeek workWeek = findOrCreateWorkWeekForDate(LocalDate.now(), freshUser.getCompany());
@@ -54,7 +54,7 @@ public class TimeLogService {
 
         // 2. ¡NUEVA VALIDACIÓN! Verificar si el usuario está dentro de la zona de trabajo.
         if (!isWithinGeofence(freshUser, request.getLatitude(), request.getLongitude())) {
-            throw new IllegalStateException("No se puede marcar el ingreso. No te encuentras en la zona de trabajo permitida.");
+            throw new IllegalStateException("Cannot clock in. You are not within the allowed work area.");
         }
 
         // 3. Si todo es correcto, registrar el evento.
@@ -110,7 +110,7 @@ public class TimeLogService {
     public TimeLogDTO recordTimeLog(User user, EventType eventType) {
         // Lógica de validación para asegurar un flujo correcto (ej. no marcar salida sin haber entrado)
         User freshUser = userRepository.findById(user.getId())
-                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         validateAction(user, eventType);
         WorkWeek workWeek = findOrCreateWorkWeekForDate(LocalDate.now(), freshUser.getCompany());
@@ -159,7 +159,7 @@ public class TimeLogService {
         };
 
         if (isInvalid) {
-            throw new IllegalStateException("Acción no permitida. El último evento fue: " + lastEventType);
+            throw new IllegalStateException("Action not allowed. Last event was: " + lastEventType);
         }
     }
 
@@ -208,19 +208,19 @@ public class TimeLogService {
         WeeklyTimesheet timesheet = findOrCreateTimesheet(worker, workWeek);
 
         if (timesheet.getStatus() != TimesheetStatus.OPEN && timesheet.getStatus() != TimesheetStatus.REJECTED) {
-            throw new IllegalStateException("Acción denegada: No puedes modificar una semana que ya ha sido enviada o está en proceso de revisión.");
+            throw new IllegalStateException("Action denied: you cannot modify a week that has already been submitted or is under review.");
         }
 
         TimeLog timeLog;
 
         if (request.getTimeLogIdToEdit() != null) {
-            // --- Flujo de Edición ---
+            // --- Edit flow ---
             timeLog = timeLogRepository.findById(request.getTimeLogIdToEdit())
-                    .orElseThrow(() -> new EntityNotFoundException("Registro de tiempo no encontrado."));
+                    .orElseThrow(() -> new EntityNotFoundException("Time log record not found."));
 
-            // Verificación de seguridad: el registro debe pertenecer al trabajador logueado
+            // Security check: the record must belong to the logged-in worker
             if (!timeLog.getUser().getId().equals(worker.getId())) {
-                throw new SecurityException("No tienes permiso para editar este registro.");
+                throw new SecurityException("You do not have permission to edit this record.");
             }
             timeLog.setEventType(request.getEventType());
             timeLog.setTimestamp(request.getTimestamp());
